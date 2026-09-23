@@ -4,29 +4,12 @@ const showcase = document.querySelector('.game-showcase');
 const splashScreen = document.getElementById('splashScreen');
 const splashVideo = document.getElementById('splashVideo');
 const bookDemoBtn = document.getElementById('bookDemoBtn');
+const footerBookDemoBtn = document.getElementById('footerBookDemoBtn');
 const demoModal = document.getElementById('demoModal');
 const closeDemoBtn = document.getElementById('closeDemoBtn');
 const skipIntroBtn = document.getElementById('skipIntroBtn');
 const demoContactLinks = document.querySelectorAll('.demo-btn');
 const demoBookedStorageKey = 'gameNationDemoBooked';
-const introSeenStorageKey = 'gameNationIntroSeen';
-
-const hasSeenIntro = () => {
-  try {
-    return window.localStorage.getItem(introSeenStorageKey) === 'true';
-  } catch (error) {
-    return false;
-  }
-};
-
-const markIntroAsSeen = () => {
-  try {
-    window.localStorage.setItem(introSeenStorageKey, 'true');
-  } catch (error) {
-    // Ignore storage failures and continue.
-  }
-};
-
 const updateBookDemoButtonLabel = () => {
   if (!bookDemoBtn) return;
 
@@ -74,6 +57,10 @@ if (bookDemoBtn) {
   bookDemoBtn.addEventListener('click', openDemoModal);
 }
 
+if (footerBookDemoBtn) {
+  footerBookDemoBtn.addEventListener('click', openDemoModal);
+}
+
 if (closeDemoBtn) {
   closeDemoBtn.addEventListener('click', closeDemoModal);
 }
@@ -109,7 +96,6 @@ const closeSplashScreen = () => {
   if (splashVideo) splashVideo.src = '';
   document.body.classList.add('flash-active');
   showcaseUnlocked = true;
-  markIntroAsSeen();
 
   setTimeout(() => {
     document.body.classList.remove('flash-active');
@@ -117,14 +103,7 @@ const closeSplashScreen = () => {
   }, 700);
 };
 
-if (splashScreen && hasSeenIntro()) {
-  splashScreen.classList.add('hidden');
-  splashScreen.setAttribute('aria-hidden', 'true');
-  splashClosed = true;
-  setTimeout(() => {
-    activateGame('gta');
-  }, 100);
-} else if (splashVideo) {
+if (splashVideo) {
   if (splashVideo.dataset.src) {
     splashVideo.src = splashVideo.dataset.src;
   }
@@ -225,8 +204,8 @@ const unlockShowcaseSound = () => {
   sendPlayerCommand(activeIframe, 'playVideo');
 };
 
-document.addEventListener('pointerdown', unlockShowcaseSound, { once: true, passive: true });
-document.addEventListener('keydown', unlockShowcaseSound, { once: true });
+document.addEventListener('pointerdown', unlockShowcaseSound, { passive: true });
+document.addEventListener('keydown', unlockShowcaseSound);
 
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
