@@ -9,6 +9,31 @@ const closeDemoBtn = document.getElementById('closeDemoBtn');
 const skipIntroBtn = document.getElementById('skipIntroBtn');
 const demoContactLinks = document.querySelectorAll('.demo-btn');
 const demoBookedStorageKey = 'gameNationDemoBooked';
+const introSeenStorageKey = 'gameNationIntroSeen';
+
+const hasSeenIntro = () => {
+  try {
+    return window.localStorage.getItem(introSeenStorageKey) === 'true';
+  } catch (error) {
+    return false;
+  }
+};
+
+const markIntroAsSeen = () => {
+  try {
+    window.localStorage.setItem(introSeenStorageKey, 'true');
+  } catch (error) {
+    // Ignore storage failures and continue.
+  }
+};
+
+const updateBookDemoButtonLabel = () => {
+  if (!bookDemoBtn) return;
+
+  const isBooked = hasBookedDemo();
+  bookDemoBtn.textContent = isBooked ? 'Contact' : 'Book Free Demo';
+  bookDemoBtn.setAttribute('aria-label', isBooked ? 'Contact' : 'Book Free Demo');
+};
 
 const hasBookedDemo = () => {
   try {
@@ -22,15 +47,15 @@ const markDemoAsBooked = () => {
   try {
     window.localStorage.setItem(demoBookedStorageKey, 'true');
   } catch (error) {
-    // The button still hides for this visit if storage is unavailable.
+    // The button still remains visible for this visit if storage is unavailable.
   }
 
-  if (bookDemoBtn) bookDemoBtn.hidden = true;
+  updateBookDemoButtonLabel();
   closeDemoModal();
 };
 
-if (bookDemoBtn && hasBookedDemo()) {
-  bookDemoBtn.hidden = true;
+if (bookDemoBtn) {
+  updateBookDemoButtonLabel();
 }
 
 const openDemoModal = () => {
@@ -84,6 +109,7 @@ const closeSplashScreen = () => {
   if (splashVideo) splashVideo.src = '';
   document.body.classList.add('flash-active');
   showcaseUnlocked = true;
+  markIntroAsSeen();
 
   setTimeout(() => {
     document.body.classList.remove('flash-active');
@@ -91,7 +117,14 @@ const closeSplashScreen = () => {
   }, 700);
 };
 
-if (splashVideo) {
+if (splashScreen && hasSeenIntro()) {
+  splashScreen.classList.add('hidden');
+  splashScreen.setAttribute('aria-hidden', 'true');
+  splashClosed = true;
+  setTimeout(() => {
+    activateGame('gta');
+  }, 100);
+} else if (splashVideo) {
   if (splashVideo.dataset.src) {
     splashVideo.src = splashVideo.dataset.src;
   }
@@ -217,22 +250,30 @@ if (tabButtons.length && tabPanels.length) {
   });
 }
 
-if (showcase) {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const visibleEntry = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+const syncActiveGameFromScroll = () => {
+  const visiblePanels = Array.from(gamePanels)
+    .map((panel) => {
+      const rect = panel.getBoundingClientRect();
+      const viewportMid = window.innerHeight * 0.5;
+      const distanceFromCenter = Math.abs(rect.top - (window.innerHeight - rect.height) / 2);
 
-      if (!visibleEntry) return;
-      activateGame(visibleEntry.target.dataset.game);
-    },
-    {
-      root: showcase,
-      threshold: [0.55, 0.7, 0.85],
-    }
-  );
+      return {
+        panel,
+        rect,
+        distanceFromCenter,
+        visible: rect.top < viewportMid && rect.bottom > window.innerHeight * 0.2,
+      };
+    })
+    .filter((entry) => entry.visible)
+    .sort((a, b) => a.distanceFromCenter - b.distanceFromCenter);
 
-  gamePanels.forEach((panel) => observer.observe(panel));
-}
+  if (!visiblePanels.length) return;
+  activateGame(visiblePanels[0].panel.dataset.game);
+};
+
+window.addEventListener('scroll', syncActiveGameFromScroll, { passive: true });
+window.addEventListener('resize', syncActiveGameFromScroll);
+window.addEventListener('load', syncActiveGameFromScroll);
+
+
 

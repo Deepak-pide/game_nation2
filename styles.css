@@ -10,6 +10,7 @@
   --shadow: rgba(0, 0, 0, 0.52);
   --display: 'Barlow Condensed', Impact, sans-serif;
   --body: 'DM Sans', sans-serif;
+  --header-height: 76px;
 }
 
 * { box-sizing: border-box; }
@@ -134,6 +135,7 @@ body.flash-active .site-flash {
   top: 0;
   left: 0;
   width: 100%;
+  height: var(--header-height);
   padding: 18px clamp(20px, 4vw, 56px);
   display: flex;
   align-items: center;
@@ -346,32 +348,25 @@ body.flash-active .site-flash {
 
 .game-showcase {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  min-height: 100svh;
+  width: 100%;
+  min-height: auto;
+  margin-top: var(--header-height);
   background: var(--bg);
-  overflow-y: auto;
+  overflow: visible;
   overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
 }
 
 .game-panel {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  scroll-snap-align: start;
+  min-height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height));
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transition: opacity 0.7s ease, visibility 0.7s ease;
-}
-
-@media (max-width: 840px) {
-  .game-panel {
-    min-height: 100svh;
-    scroll-snap-align: none;
-  }
+  transform: none;
+  transition: none;
+  overflow: hidden;
 }
 
 .game-panel.is-active {
@@ -717,19 +712,27 @@ body.flash-active .site-flash {
 
   .game-showcase {
     width: 100%;
-    height: auto !important;
-    min-height: 100svh;
+    min-height: auto;
+    margin-top: var(--header-height);
     overflow: visible !important;
-    overflow-y: visible !important;
     overflow-x: hidden !important;
-    scroll-snap-type: none !important;
     touch-action: pan-y;
-    overscroll-behavior-y: auto;
   }
 
   .game-panel {
-    height: 100svh;
-    min-height: 100svh;
+    position: relative;
+    width: 100%;
+    height: calc(100svh - var(--header-height));
+    min-height: calc(100svh - var(--header-height));
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: none;
+  }
+
+  .game-panel.is-active {
+    z-index: 2;
   }
 
   .panel-content {
