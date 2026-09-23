@@ -171,7 +171,6 @@ const playActiveVideo = (gameName) => {
 
     pendingVideoStartTimer = setTimeout(() => {
       sendPlayerCommand(iframe, 'playVideo');
-      sendPlayerCommand(iframe, 'unMute');
       gamePanels.forEach((panel) => {
         panel.classList.remove('loading-video');
         panel.classList.toggle('video-ready', panel.dataset.game === gameName);
