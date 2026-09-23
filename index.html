@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Game Nation - cinematic game showcase featuring GTA VI, God of War, and Forza Horizon 5."
+    />
+    <title>Game Nation </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="splash-screen" id="splashScreen" aria-hidden="true">
+      <button class="skip-intro" type="button" id="skipIntroBtn" aria-label="Skip intro">Skip intro</button>
+      <div class="splash-video-wrap">
+        <iframe
+          id="splashVideo"
+          class="splash-video"
+          data-src="https://www.youtube-nocookie.com/embed/RkC0l4iekYo?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&start=69&end=94&enablejsapi=1"
+          title="Game Nation intro"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </div>
+    </div>
+    <div class="site-flash" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Game Nation home">
+        <span class="brand-mark">GN</span>
+        <span class="brand-name">GAME <b>NATION</b></span>
+      </a>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#top">Games</a>
+        <a href="#pricing">Pricing</a>
+        <a href="more-games.html">Explore</a>
+        <a href="#contact">Support</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="explore-link" href="more-games.html">Explore More Games</a>
+        <a class="mobile-pricing-link" href="#pricing">Pricing</a>
+        <button class="nav-pill" type="button" id="bookDemoBtn">Book Free Demo</button>
+      </div>
+    </header>
+
+    <main class="game-showcase" id="top">
+      <article class="game-panel is-active" data-game="gta" aria-label="GTA VI spotlight">
+        <div class="panel-bg" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSneM-4PtbCY_vl-1TlrQFcWR1rCG3xyvH5KxC5qT0qZA&s=10');"></div>
+        <div class="panel-video">
+          <iframe
+            data-src="https://www.youtube-nocookie.com/embed/QdBZY2fkU-0?autoplay=1&mute=0&controls=0&playsinline=1&rel=0&start=5"
+            title="GTA VI trailer preview"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <div class="panel-overlay"></div>
+
+        <div class="panel-content">
+          <p class="eyebrow"><span></span> Grand Theft Auto</p>
+          <h1>GTA VI</h1>
+          <p class="panel-copy">Vice City opens up in a world of neon dreams, danger, and endless freedom.</p>
+          <div class="panel-meta">
+            <span>Open world</span>
+            <span>Action</span>
+            <span>2026</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-panel" data-game="gow" aria-label="God of War spotlight">
+        <div class="panel-bg" style="background-image: url('https://image.api.playstation.com/vulcan/img/rnd/202010/2217/p3pYq0QxntZQREXRVdAzmn1w.png');"></div>
+        <div class="panel-video">
+          <iframe
+            data-src="https://www.youtube-nocookie.com/embed/EE-4GvjKcfs?autoplay=1&mute=0&controls=0&playsinline=1&rel=0&start=10"
+            title="God of War trailer preview"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <div class="panel-overlay"></div>
+
+        <div class="panel-content">
+          <p class="eyebrow"><span></span> Sony Santa Monica</p>
+          <h1>God of War</h1>
+          <p class="panel-copy">A mythic journey through the gods, the frost, and a father-son bond tested by fate.</p>
+          <div class="panel-meta">
+            <span>Adventure</span>
+            <span>Mythic</span>
+            <span>Single player</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-panel" data-game="forza" aria-label="Forza Horizon 5 spotlight">
+        <div class="panel-bg" style="background-image: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=80');"></div>
+        <div class="panel-video">
+          <iframe
+            data-src="https://www.youtube-nocookie.com/embed/VgTMgIVx2A4?autoplay=1&mute=0&controls=0&playsinline=1&rel=0&start=207"
+            title="Forza Horizon 5 trailer preview"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <div class="panel-overlay"></div>
+
+        <div class="panel-content">
+          <p class="eyebrow"><span></span> Playground Games</p>
+          <h1>Forza Horizon 5</h1>
+          <p class="panel-copy">Chase horizons across a vibrant open world where every road feels like a dare.</p>
+          <div class="panel-meta">
+            <span>Racing</span>
+            <span>Open world</span>
+            <span>Multiplayer</span>
+          </div>
+        </div>
+      </article>
+
+      <aside class="game-menu" aria-label="Featured games list">
+        <button class="game-item is-active" type="button" data-game="gta">
+          <span class="game-index">01</span>
+          <span class="game-text">
+            <small>Open world</small>
+            <strong>GTA VI</strong>
+          </span>
+        </button>
+
+        <button class="game-item" type="button" data-game="gow">
+          <span class="game-index">02</span>
+          <span class="game-text">
+            <small>Adventure</small>
+            <strong>God of War</strong>
+          </span>
+        </button>
+
+        <button class="game-item" type="button" data-game="forza">
+          <span class="game-index">03</span>
+          <span class="game-text">
+            <small>Racing</small>
+            <strong>Forza Horizon 5</strong>
+          </span>
+        </button>
+      </aside>
+    </main>
+
+    <section class="explore-section" id="explore">
+      <div class="explore-header">
+        <p class="eyebrow"><span></span> Explore</p>
+        <h2>See the full gaming library</h2>
+      </div>
+
+      <div class="explore-cta-wrap">
+        <p>Browse the complete Solo, Duo, and Squad game catalog on the dedicated More Games page.</p>
+        <a class="nav-pill explore-link-page" href="more-games.html">Open More Games</a>
+      </div>
+    </section>
+
+    <section class="pricing-section" id="pricing">
+      <div class="pricing-header">
+        <p class="eyebrow"><span></span> Pricing</p>
+        <h2>Choose your gaming session</h2>
+      </div>
+
+      <div class="pricing-grid">
+        <article class="price-card">
+          <span class="plan-name">Solo</span>
+          <h3>₹40</h3>
+          <p>for 30 min</p>
+          <ul>
+            <li>Private seat</li>
+            <li>Best for quick play</li>
+            <li>Flexible setup</li>
+          </ul>
+        </article>
+
+        <article class="price-card featured">
+          <span class="plan-name">Duo</span>
+          <h3>₹30 <small>each</small></h3>
+          <p>shared gaming session</p>
+          <ul>
+            <li>2-player setup</li>
+            <li>Perfect for friends</li>
+            <li>Co-op friendly</li>
+          </ul>
+        </article>
+
+        <article class="price-card">
+          <span class="plan-name">Squad</span>
+          <h3>₹20 <small>each</small></h3>
+          <p>team play package</p>
+          <ul>
+            <li>Group setup</li>
+            <li>Competitive energy</li>
+            <li>Best team value</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <div class="demo-modal" id="demoModal" aria-hidden="true">
+      <div class="demo-modal-card">
+        <button class="close-demo" type="button" id="closeDemoBtn" aria-label="Close booking options">×</button>
+        <p class="eyebrow"><span></span> Contact us</p>
+        <h3>Book your free demo</h3>
+        <div class="demo-actions">
+          <a class="demo-btn whatsapp" href="https://wa.me/9179349919?text=hii%20we%20are%20intrested%20to%20play%20!" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a class="demo-btn call" href="tel:+9179349919">Call</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
