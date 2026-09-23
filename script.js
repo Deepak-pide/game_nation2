@@ -146,8 +146,8 @@ const playActiveVideo = (gameName) => {
         panel.classList.remove('loading-video');
         panel.classList.toggle('video-ready', panel.dataset.game === gameName);
       });
-    }, 200);
-  }, 3000);
+    }, 250);
+  }, 0);
 };
 
 const stopInactiveVideos = () => {
@@ -184,6 +184,16 @@ gameItems.forEach((item) => {
   item.addEventListener('focus', () => activateGame(item.dataset.game));
   item.addEventListener('click', () => activateGame(item.dataset.game));
 });
+
+const unlockShowcaseSound = () => {
+  const activeIframe = document.querySelector('.game-panel.is-active iframe');
+  if (!activeIframe) return;
+  sendPlayerCommand(activeIframe, 'unMute');
+  sendPlayerCommand(activeIframe, 'playVideo');
+};
+
+document.addEventListener('pointerdown', unlockShowcaseSound, { once: true, passive: true });
+document.addEventListener('keydown', unlockShowcaseSound, { once: true });
 
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');

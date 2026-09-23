@@ -312,7 +312,8 @@ body.flash-active .site-flash {
 .game-card img {
   display: block;
   width: 100%;
-  height: 210px;
+  height: auto;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
 }
 
@@ -722,11 +723,19 @@ body.flash-active .site-flash {
     overflow-y: visible !important;
     overflow-x: hidden !important;
     scroll-snap-type: none !important;
+    touch-action: pan-y;
+    overscroll-behavior-y: auto;
+  }
+
+  .game-panel {
+    height: 100svh;
+    min-height: 100svh;
   }
 
   .panel-content {
     max-width: 100%;
-    min-height: auto;
+    min-height: 100%;
+    height: 100%;
     padding: 104px 18px 140px;
   }
 
@@ -746,6 +755,15 @@ body.flash-active .site-flash {
 
   .panel-video iframe {
     transform: scale(1.45);
+  }
+
+  .game-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .game-card img {
+    aspect-ratio: 4 / 3;
   }
 
   .pricing-grid {
