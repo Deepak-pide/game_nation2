@@ -17,23 +17,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="splash-screen" id="splashScreen" aria-hidden="true">
-      <button class="skip-intro" type="button" id="skipIntroBtn" aria-label="Skip intro">Skip intro</button>
-      <button class="enable-sound" type="button" id="enableSoundBtn" aria-label="Enable intro sound">Enable sound</button>
-      <div class="splash-video-wrap">
-        <iframe
-          id="splashVideo"
-          class="splash-video"
-          src="https://www.youtube-nocookie.com/embed/RkC0l4iekYo?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&start=69&end=94&enablejsapi=1"
-          data-src="https://www.youtube-nocookie.com/embed/RkC0l4iekYo?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&start=69&end=94&enablejsapi=1"
-          title="Game Nation intro"
-          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
-    <div class="site-flash" aria-hidden="true"></div>
-
     <header class="site-header">
       <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home">
         <span class="brand-mark">GN</span>
@@ -53,7 +36,20 @@
       </div>
     </header>
 
-    <main class="game-showcase" id="top">
+    <section class="hero-intro" id="top">
+      <div class="hero-intro__content">
+        <p class="eyebrow hero-eyebrow"><span></span> Sony PlayStation</p>
+        <h1>EXPERIENCE SONY PLAYSTATION</h1>
+        <p>
+          Cinematic gaming, epic worlds, and next-gen thrills.
+        </p>
+        <div class="hero-actions">
+          <button class="nav-pill hero-scroll-btn" type="button" data-scroll-target="#gta-showcase">Intro</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="game-showcase" id="gta-showcase">
       <button class="game-sound-toggle" type="button" id="gameSoundToggle" aria-label="Unmute game trailers" aria-pressed="false" title="Unmute game trailers">
         <svg class="sound-icon sound-icon-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>
         <svg class="sound-icon sound-icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 9.5a4 4 0 0 1 0 5M18 6.5a8 8 0 0 1 0 11"/></svg>

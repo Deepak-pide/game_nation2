@@ -1,15 +1,12 @@
 const gameItems = document.querySelectorAll('.game-item');
 const gamePanels = document.querySelectorAll('.game-panel');
 const showcase = document.querySelector('.game-showcase');
-const splashScreen = document.getElementById('splashScreen');
-const splashVideo = document.getElementById('splashVideo');
 const bookDemoBtn = document.getElementById('bookDemoBtn');
 const footerBookDemoBtn = document.getElementById('footerBookDemoBtn');
 const demoModal = document.getElementById('demoModal');
 const closeDemoBtn = document.getElementById('closeDemoBtn');
-const skipIntroBtn = document.getElementById('skipIntroBtn');
-const enableSoundBtn = document.getElementById('enableSoundBtn');
 const gameSoundToggle = document.getElementById('gameSoundToggle');
+const heroScrollBtn = document.querySelector('.hero-scroll-btn');
 const demoContactLinks = document.querySelectorAll('.demo-btn');
 const demoBookedStorageKey = 'gameNationDemoBooked';
 const updateBookDemoButtonLabel = () => {
@@ -71,27 +68,13 @@ demoContactLinks.forEach((link) => {
   link.addEventListener('click', markDemoAsBooked);
 });
 
-if (skipIntroBtn) {
-  skipIntroBtn.addEventListener('click', () => {
-    closeSplashScreen();
+if (heroScrollBtn) {
+  heroScrollBtn.addEventListener('click', () => {
+    const target = document.querySelector(heroScrollBtn.dataset.scrollTarget || '#gta-showcase');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
-}
-
-const enableIntroSound = () => {
-  if (!splashVideo) return;
-
-  sendPlayerCommand(splashVideo, 'unMute');
-  sendPlayerCommand(splashVideo, 'setVolume', [100]);
-  sendPlayerCommand(splashVideo, 'playVideo');
-
-  if (enableSoundBtn) {
-    enableSoundBtn.classList.add('is-enabled');
-    enableSoundBtn.textContent = 'Sound enabled';
-  }
-};
-
-if (enableSoundBtn) {
-  enableSoundBtn.addEventListener('click', enableIntroSound);
 }
 
 if (demoModal) {
@@ -100,48 +83,10 @@ if (demoModal) {
   });
 }
 
-let splashClosed = false;
-let showcaseUnlocked = false;
 let pendingVideoLoadTimer = null;
 let pendingVideoStartTimer = null;
-let splashCloseTimer = null;
 
-const closeSplashScreen = () => {
-  if (!splashScreen || splashClosed) return;
-
-  splashClosed = true;
-  if (splashCloseTimer) clearTimeout(splashCloseTimer);
-  splashScreen.classList.add('hidden');
-  if (splashVideo) splashVideo.src = '';
-  document.body.classList.add('flash-active');
-  showcaseUnlocked = true;
-
-  setTimeout(() => {
-    document.body.classList.remove('flash-active');
-    activateGame('gta');
-  }, 700);
-};
-
-const shouldSkipIntro = new URLSearchParams(window.location.search).has('skipIntro');
-
-if (shouldSkipIntro) {
-  closeSplashScreen();
-}
-
-if (splashVideo) {
-  if (splashVideo.dataset.src) {
-    splashVideo.src = splashVideo.dataset.src;
-  }
-
-  const scheduleSplashClose = () => {
-    if (splashClosed) return;
-    if (splashCloseTimer) clearTimeout(splashCloseTimer);
-    splashCloseTimer = setTimeout(closeSplashScreen, 26000);
-  };
-
-  splashVideo.addEventListener('load', scheduleSplashClose, { once: true });
-  splashCloseTimer = setTimeout(closeSplashScreen, 32000);
-}
+activateGame('gta');
 
 const sendPlayerCommand = (iframe, func, args = []) => {
   if (!iframe || !iframe.contentWindow) return;
@@ -199,10 +144,6 @@ const stopInactiveVideos = () => {
 };
 
 const activateGame = (gameName) => {
-  if (splashScreen && !splashClosed) {
-    return;
-  }
-
   gameItems.forEach((item) => {
     item.classList.toggle('is-active', item.dataset.game === gameName);
   });
