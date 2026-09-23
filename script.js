@@ -8,6 +8,7 @@ const footerBookDemoBtn = document.getElementById('footerBookDemoBtn');
 const demoModal = document.getElementById('demoModal');
 const closeDemoBtn = document.getElementById('closeDemoBtn');
 const skipIntroBtn = document.getElementById('skipIntroBtn');
+const enableSoundBtn = document.getElementById('enableSoundBtn');
 const demoContactLinks = document.querySelectorAll('.demo-btn');
 const demoBookedStorageKey = 'gameNationDemoBooked';
 const updateBookDemoButtonLabel = () => {
@@ -73,6 +74,23 @@ if (skipIntroBtn) {
   skipIntroBtn.addEventListener('click', () => {
     closeSplashScreen();
   });
+}
+
+const enableIntroSound = () => {
+  if (!splashVideo) return;
+
+  sendPlayerCommand(splashVideo, 'unMute');
+  sendPlayerCommand(splashVideo, 'setVolume', [100]);
+  sendPlayerCommand(splashVideo, 'playVideo');
+
+  if (enableSoundBtn) {
+    enableSoundBtn.classList.add('is-enabled');
+    enableSoundBtn.textContent = 'Sound enabled';
+  }
+};
+
+if (enableSoundBtn) {
+  enableSoundBtn.addEventListener('click', enableIntroSound);
 }
 
 if (demoModal) {
