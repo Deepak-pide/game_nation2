@@ -86,8 +86,6 @@ if (demoModal) {
 let pendingVideoLoadTimer = null;
 let pendingVideoStartTimer = null;
 
-activateGame('gta');
-
 const sendPlayerCommand = (iframe, func, args = []) => {
   if (!iframe || !iframe.contentWindow) return;
   iframe.contentWindow.postMessage(
@@ -111,6 +109,7 @@ const playActiveVideo = (gameName) => {
     panel.classList.toggle('loading-video', isTarget);
 
     if (panelIframe && !isTarget) {
+      sendPlayerCommand(panelIframe, 'pauseVideo');
       sendPlayerCommand(panelIframe, 'stopVideo');
       panelIframe.src = '';
     }
@@ -137,13 +136,16 @@ const stopInactiveVideos = () => {
     if (!iframe || !iframe.dataset.src) return;
 
     if (!panel.classList.contains('is-active')) {
+      sendPlayerCommand(iframe, 'pauseVideo');
       sendPlayerCommand(iframe, 'stopVideo');
       iframe.src = '';
     }
   });
 };
 
-const activateGame = (gameName) => {
+function activateGame(gameName) {
+  if (!gameName) return;
+
   gameItems.forEach((item) => {
     item.classList.toggle('is-active', item.dataset.game === gameName);
   });
@@ -154,7 +156,9 @@ const activateGame = (gameName) => {
 
   stopInactiveVideos();
   playActiveVideo(gameName);
-};
+}
+
+activateGame('gta');
 
 gameItems.forEach((item) => {
   item.addEventListener('mouseenter', () => activateGame(item.dataset.game));
@@ -242,7 +246,17 @@ const syncActiveGameFromScroll = () => {
     .filter((entry) => entry.visible)
     .sort((a, b) => a.distanceFromCenter - b.distanceFromCenter);
 
-  if (!visiblePanels.length) return;
+  if (!visiblePanels.length) {
+    gamePanels.forEach((panel) => {
+      const iframe = panel.querySelector('iframe');
+      if (iframe) {
+        sendPlayerCommand(iframe, 'pauseVideo');
+        sendPlayerCommand(iframe, 'stopVideo');
+      }
+    });
+    return;
+  }
+
   activateGame(visiblePanels[0].panel.dataset.game);
 };
 
