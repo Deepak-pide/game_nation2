@@ -9,6 +9,7 @@ const demoModal = document.getElementById('demoModal');
 const closeDemoBtn = document.getElementById('closeDemoBtn');
 const skipIntroBtn = document.getElementById('skipIntroBtn');
 const enableSoundBtn = document.getElementById('enableSoundBtn');
+const gameSoundToggle = document.getElementById('gameSoundToggle');
 const demoContactLinks = document.querySelectorAll('.demo-btn');
 const demoBookedStorageKey = 'gameNationDemoBooked';
 const updateBookDemoButtonLabel = () => {
@@ -121,6 +122,12 @@ const closeSplashScreen = () => {
   }, 700);
 };
 
+const shouldSkipIntro = new URLSearchParams(window.location.search).has('skipIntro');
+
+if (shouldSkipIntro) {
+  closeSplashScreen();
+}
+
 if (splashVideo) {
   if (splashVideo.dataset.src) {
     splashVideo.src = splashVideo.dataset.src;
@@ -215,11 +222,42 @@ gameItems.forEach((item) => {
 });
 
 const unlockShowcaseSound = () => {
+  if (gameSoundEnabled) return;
+
   const activeIframe = document.querySelector('.game-panel.is-active iframe');
   if (!activeIframe) return;
   sendPlayerCommand(activeIframe, 'unMute');
   sendPlayerCommand(activeIframe, 'playVideo');
 };
+
+let gameSoundEnabled = false;
+
+const updateGameSoundToggle = () => {
+  if (!gameSoundToggle) return;
+
+  gameSoundToggle.setAttribute('aria-pressed', String(gameSoundEnabled));
+  gameSoundToggle.setAttribute('aria-label', gameSoundEnabled ? 'Mute game trailers' : 'Unmute game trailers');
+  gameSoundToggle.setAttribute('title', gameSoundEnabled ? 'Mute game trailers' : 'Unmute game trailers');
+  gameSoundToggle.classList.toggle('is-enabled', gameSoundEnabled);
+};
+
+if (gameSoundToggle) {
+  gameSoundToggle.addEventListener('pointerdown', (event) => event.stopPropagation());
+  gameSoundToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    gameSoundEnabled = !gameSoundEnabled;
+
+    const activeIframe = document.querySelector('.game-panel.is-active iframe');
+    if (activeIframe) {
+      sendPlayerCommand(activeIframe, gameSoundEnabled ? 'unMute' : 'mute');
+      sendPlayerCommand(activeIframe, 'playVideo');
+    }
+
+    updateGameSoundToggle();
+  });
+
+  updateGameSoundToggle();
+}
 
 document.addEventListener('pointerdown', unlockShowcaseSound, { passive: true });
 document.addEventListener('keydown', unlockShowcaseSound);

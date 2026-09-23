@@ -388,6 +388,47 @@ body.flash-active .site-flash {
   overflow-x: hidden;
 }
 
+.game-sound-toggle {
+  position: fixed;
+  right: clamp(20px, 4vw, 56px);
+  bottom: 24px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(7, 9, 13, 0.7);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.game-sound-toggle:hover,
+.game-sound-toggle:focus-visible,
+.game-sound-toggle.is-enabled {
+  border-color: var(--yellow);
+  background: rgba(230, 251, 86, 0.14);
+  color: var(--yellow);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.sound-icon {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.sound-icon-on { display: none; }
+.game-sound-toggle.is-enabled .sound-icon-muted { display: none; }
+.game-sound-toggle.is-enabled .sound-icon-on { display: block; }
+
 .game-panel {
   position: relative;
   width: 100%;
@@ -900,6 +941,11 @@ body.flash-active .site-flash {
   .enable-sound {
     right: 16px;
     bottom: 16px;
+  }
+
+  .game-sound-toggle {
+    right: 16px;
+    bottom: 18px;
   }
 
   .nav-pill {
