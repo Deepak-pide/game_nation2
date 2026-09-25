@@ -1,3 +1,4 @@
+
 const gameItems = document.querySelectorAll('.game-item');
 const gamePanels = document.querySelectorAll('.game-panel');
 const showcase = document.querySelector('.game-showcase');
@@ -86,6 +87,18 @@ if (demoModal) {
 let pendingVideoLoadTimer = null;
 let pendingVideoStartTimer = null;
 
+const getVideoStartSeconds = (iframe) => {
+  if (!iframe || !iframe.dataset.src) return 0;
+
+  try {
+    const url = new URL(iframe.dataset.src, window.location.href);
+    const startValue = Number(url.searchParams.get('start') || 0);
+    return Number.isFinite(startValue) ? startValue : 0;
+  } catch (error) {
+    return 0;
+  }
+};
+
 const sendPlayerCommand = (iframe, func, args = []) => {
   if (!iframe || !iframe.contentWindow) return;
   iframe.contentWindow.postMessage(
@@ -121,7 +134,13 @@ const playActiveVideo = (gameName) => {
     }
 
     pendingVideoStartTimer = setTimeout(() => {
+      const startAt = getVideoStartSeconds(iframe);
+
       sendPlayerCommand(iframe, 'playVideo');
+      if (startAt > 0) {
+        sendPlayerCommand(iframe, 'seekTo', [startAt, true]);
+      }
+
       gamePanels.forEach((panel) => {
         panel.classList.remove('loading-video');
         panel.classList.toggle('video-ready', panel.dataset.game === gameName);
@@ -171,8 +190,13 @@ const unlockShowcaseSound = () => {
 
   const activeIframe = document.querySelector('.game-panel.is-active iframe');
   if (!activeIframe) return;
+
+  const startAt = getVideoStartSeconds(activeIframe);
   sendPlayerCommand(activeIframe, 'unMute');
   sendPlayerCommand(activeIframe, 'playVideo');
+  if (startAt > 0) {
+    sendPlayerCommand(activeIframe, 'seekTo', [startAt, true]);
+  }
 };
 
 let gameSoundEnabled = false;
@@ -194,8 +218,12 @@ if (gameSoundToggle) {
 
     const activeIframe = document.querySelector('.game-panel.is-active iframe');
     if (activeIframe) {
+      const startAt = getVideoStartSeconds(activeIframe);
       sendPlayerCommand(activeIframe, gameSoundEnabled ? 'unMute' : 'mute');
       sendPlayerCommand(activeIframe, 'playVideo');
+      if (startAt > 0) {
+        sendPlayerCommand(activeIframe, 'seekTo', [startAt, true]);
+      }
     }
 
     updateGameSoundToggle();
