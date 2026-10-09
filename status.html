@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Check and manage Game Nation booking slots by date." />
+    <title>Game Nation | Status</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home">
+        <span class="brand-mark">GN</span>
+        <span class="brand-name">GAME <b>NATION</b></span>
+      </a>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html?skipIntro=1#top">Games</a>
+        <a href="index.html#pricing">Pricing</a>
+        <a href="more-games.html">Explore</a>
+        <a href="status.html" aria-current="page">Status</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="explore-link" href="more-games.html">Explore More Games</a>
+        <a class="mobile-status-link" href="status.html" aria-current="page">Status</a>
+      </div>
+    </header>
+
+    <main class="status-page">
+      <div class="status-shell">
+        <section class="status-heading" aria-labelledby="statusTitle">
+          <div>
+            <p class="eyebrow"><span></span> Game Nation bookings</p>
+            <h1 id="statusTitle">Slot status</h1>
+            <p class="status-heading-copy">Choose a day to see what is open. Select any slot to book it or remove an existing booking.</p>
+          </div>
+          <label class="status-date-control" for="bookingDate">
+            Select a date
+            <input id="bookingDate" type="date" />
+          </label>
+        </section>
+
+        <section aria-label="Booking slots">
+          <div class="status-overview">
+            <p class="status-selected-date" id="selectedDateLabel"></p>
+            <div class="status-legend" aria-label="Slot status key">
+              <span><i aria-hidden="true"></i> Available</span>
+              <span><i class="booked-dot" aria-hidden="true"></i> Booked</span>
+            </div>
+          </div>
+          <div id="slotGroups"></div>
+          <p class="status-feedback" id="bookingFeedback" role="status" aria-live="polite"></p>
+        </section>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="status.js"></script>
+  </body>
+</html>
