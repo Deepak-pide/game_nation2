@@ -30,6 +30,8 @@
       <div class="header-actions">
         <a class="explore-link" href="more-games.html">Explore More Games</a>
         <a class="mobile-status-link" href="status.html" aria-current="page">Status</a>
+        <a class="explore-link" href="account.html">Account</a>
+        <a class="explore-link" href="dashboard.html">Dashboard</a>
       </div>
     </header>
 
@@ -39,12 +41,12 @@
           <div>
             <p class="eyebrow"><span></span> Game Nation bookings</p>
             <h1 id="statusTitle">Slot status</h1>
-            <p class="status-heading-copy">Choose a day to see what is open. Select any slot to book it or remove an existing booking.</p>
+            <p class="status-heading-copy">Choose a console and date to request a session. Confirmed bookings are reserved once approved.</p>
           </div>
-          <label class="status-date-control" for="bookingDate">
-            Select a date
-            <input id="bookingDate" type="date" />
-          </label>
+          <div class="status-filters">
+            <label class="status-date-control" for="consoleSelect">Console<select id="consoleSelect"></select></label>
+            <label class="status-date-control" for="bookingDate">Select a date<input id="bookingDate" type="date" /></label>
+          </div>
         </section>
 
         <section aria-label="Booking slots">
@@ -52,7 +54,8 @@
             <p class="status-selected-date" id="selectedDateLabel"></p>
             <div class="status-legend" aria-label="Slot status key">
               <span><i aria-hidden="true"></i> Available</span>
-              <span><i class="booked-dot" aria-hidden="true"></i> Booked</span>
+              <span><i class="booked-dot" aria-hidden="true"></i> Confirmed</span>
+              <span><i class="pending-dot" aria-hidden="true"></i> Pending</span>
             </div>
           </div>
           <div id="slotGroups"></div>
@@ -61,7 +64,7 @@
       </div>
     </main>
 
-    <script src="script.js"></script>
-    <script src="status.js"></script>
+    <script type="module" src="script.js"></script>
+    <script type="module" src="status.js"></script>
   </body>
 </html>

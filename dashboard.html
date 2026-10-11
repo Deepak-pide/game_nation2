@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Game Nation gamer and administration dashboard." />
+    <title>Game Nation | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
+      <nav class="main-nav" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="status.html">Book</a></nav>
+      <div class="header-actions"><button class="text-button" id="signOutButton" type="button">Sign out</button></div>
+    </header>
+
+    <main class="dashboard-page">
+      <div class="dashboard-shell">
+        <section class="dashboard-heading">
+          <div><p class="eyebrow"><span></span> Game Nation member area</p><h1 id="dashboardTitle">Dashboard</h1><p id="dashboardIntro" class="status-heading-copy"></p></div>
+          <a class="nav-pill" href="status.html">Find a session</a>
+        </section>
+        <p class="dashboard-feedback" id="dashboardFeedback" role="status" aria-live="polite"></p>
+
+        <section id="gamerView" hidden>
+          <article class="gamer-card">
+            <div class="gamer-card-title"><div><p class="eyebrow"><span></span> Your gamer card</p><h2 id="gamerName">Player</h2></div><span class="gamer-id" id="gamerId">GN-...</span></div>
+            <dl class="gamer-stats"><div><dt>Member since</dt><dd id="memberSince">—</dd></div><div><dt>Total bookings</dt><dd id="totalBookings">0</dd></div><div><dt>Completed sessions</dt><dd id="completedSessions">0</dd></div><div><dt>Spending</dt><dd id="gamerSpending">₹0</dd></div></dl>
+          </article>
+          <section class="dashboard-section">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Account details</p><h2>Your profile</h2></div></div>
+            <form id="profileForm" class="profile-form">
+              <label class="form-field">Full name<input name="full_name" maxlength="80" required /></label>
+              <label class="form-field">Phone<input name="phone" type="tel" maxlength="30" autocomplete="tel" /></label>
+              <button class="nav-pill" type="submit">Save profile</button>
+            </form>
+          </section>
+          <section class="dashboard-section">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Your activity</p><h2>Booking history</h2></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Session</th><th>Console</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody id="gamerBookings"></tbody></table></div>
+            <p class="empty-state" id="gamerBookingsEmpty" hidden>No bookings yet. Find an available session to get started.</p>
+          </section>
+        </section>
+
+        <section id="adminView" hidden>
+          <div class="admin-toolbar"><label class="form-field">From<input id="analyticsFrom" type="date" /></label><label class="form-field">To<input id="analyticsTo" type="date" /></label><button class="nav-pill" id="refreshAnalytics" type="button">Refresh report</button></div>
+          <div class="metrics-grid" id="analyticsMetrics"></div>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Operations</p><h2>Bookings</h2></div><label class="table-search">Search bookings<input id="bookingSearch" type="search" placeholder="Game ID, gamer, console" /></label></div>
+            <div class="filter-row"><label class="form-field">Status<select id="bookingStatusFilter"><option value="all">All statuses</option><option>pending</option><option>approved</option><option>rejected</option><option>cancelled</option><option>completed</option></select></label><label class="form-field">Date<input id="bookingDateFilter" type="date" /></label></div>
+            <div class="table-wrap"><table><thead><tr><th>Gamer</th><th>Console</th><th>Session</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead><tbody id="adminBookings"></tbody></table></div>
+            <p class="empty-state" id="adminBookingsEmpty" hidden>No bookings match these filters.</p>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Member records</p><h2>Gamers</h2></div><label class="table-search">Search gamers<input id="gamerSearch" type="search" placeholder="Name, email, Game ID" /></label></div>
+            <div class="table-wrap"><table><thead><tr><th>Game ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Member since</th><th>Bookings</th><th></th></tr></thead><tbody id="adminGamers"></tbody></table></div>
+            <p class="empty-state" id="adminGamersEmpty" hidden>No gamer records match this search.</p>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Equipment</p><h2>Consoles</h2></div></div>
+            <form id="consoleForm" class="inline-form"><label class="form-field">Console name<input name="name" maxlength="80" required placeholder="PlayStation 5 - 03" /></label><label class="form-field">Platform<input name="platform" maxlength="80" required value="PlayStation 5" /></label><label class="form-field">Hourly rate (₹)<input name="hourly_rate" type="number" min="0" step="0.01" required /></label><button class="nav-pill" type="submit">Add console</button></form>
+            <div class="console-list" id="consoleList"></div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Scheduling</p><h2>Slot availability</h2></div></div>
+            <form id="availabilityForm" class="inline-form">
+              <label class="form-field">Console<select name="console_id" id="availabilityConsole" required></select></label>
+              <label class="form-field">Date<input name="date" type="date" required /></label>
+              <label class="form-field">Starts<input name="start_time" type="time" required /></label>
+              <label class="form-field">Ends<input name="end_time" type="time" required /></label>
+              <button class="nav-pill" type="submit">Add time slot</button>
+            </form>
+            <div class="table-wrap"><table><thead><tr><th>Console</th><th>Starts</th><th>Ends</th><th>Availability</th><th></th></tr></thead><tbody id="adminSlots"></tbody></table></div>
+            <p class="empty-state" id="adminSlotsEmpty" hidden>No scheduled slots yet.</p>
+          </section>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>

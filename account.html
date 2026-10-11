@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Sign in or create your Game Nation gamer account." />
+    <title>Game Nation | Account</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
+      <nav class="main-nav" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="status.html">Status</a></nav>
+      <div class="header-actions"><a class="explore-link" href="dashboard.html">Gamer dashboard</a></div>
+    </header>
+
+    <main class="account-page">
+      <section class="account-shell">
+        <div class="account-intro"><p class="eyebrow"><span></span> Game Nation member access</p><h1 id="accountTitle">Sign in to play</h1><p>Manage your bookings, track your sessions, and keep your Game ID close.</p></div>
+        <section class="account-panel" aria-labelledby="accountTitle">
+          <div id="accountForms">
+            <form id="authForm" class="form-stack">
+              <label class="form-field" id="nameField" hidden>Full name<input name="full_name" autocomplete="name" maxlength="80" /></label>
+              <label class="form-field">Email<input name="email" type="email" autocomplete="email" required /></label>
+              <label class="form-field">Password<input name="password" type="password" autocomplete="current-password" minlength="8" required /></label>
+              <button class="nav-pill account-submit" id="authSubmit" type="submit">Sign in</button>
+            </form>
+            <div class="account-links"><button type="button" class="text-button" id="switchAuth">Create an account</button><button type="button" class="text-button" id="forgotPassword">Forgot password?</button></div>
+            <form id="resetForm" class="form-stack" hidden>
+              <label class="form-field">New password<input name="password" type="password" minlength="8" autocomplete="new-password" required /></label>
+              <button class="nav-pill account-submit" type="submit">Save new password</button>
+            </form>
+          </div>
+          <p class="account-feedback" id="accountFeedback" role="status" aria-live="polite"></p>
+          <a class="account-back" href="index.html?skipIntro=1#top">Back to Game Nation</a>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="account.js"></script>
+  </body>
+</html>

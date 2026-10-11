@@ -1,0 +1,2 @@
+[functions.device-status]
+verify_jwt = false

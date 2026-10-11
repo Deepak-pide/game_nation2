@@ -1389,3 +1389,146 @@ button {
   .slot-grid { grid-template-columns: 1fr; }
   .slot-button { align-items: center; flex-direction: row; min-height: 66px; }
 }
+
+[hidden] { display: none !important; }
+
+.status-filters {
+  display: flex;
+  gap: 14px;
+}
+
+.status-date-control select,
+.form-field input,
+.form-field select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  background: #111820;
+  color: var(--text);
+  color-scheme: dark;
+  font: 500 14px var(--body);
+}
+
+.status-date-control select { min-height: 48px; }
+.status-filters .status-date-control { min-width: 200px; }
+.slot-button.is-pending { border-color: rgba(230, 251, 86, 0.45); border-left-color: var(--yellow); background: rgba(230, 251, 86, 0.09); }
+.slot-button.is-pending .slot-state { color: var(--yellow); }
+.status-legend .pending-dot { background: var(--yellow); }
+.slot-button:disabled { cursor: not-allowed; opacity: 0.65; }
+.status-signin { display: inline-flex; margin-top: 22px; }
+
+.account-page,
+.dashboard-page {
+  min-height: 100vh;
+  padding: calc(var(--header-height) + 48px) clamp(20px, 7vw, 100px) 76px;
+  background:
+    radial-gradient(ellipse at 12% 10%, rgba(230, 251, 86, 0.08), transparent 36%),
+    linear-gradient(145deg, #0a0d12 0%, #10151b 54%, #0b0e13 100%);
+}
+
+.account-shell { width: min(100%, 980px); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); align-items: center; gap: clamp(36px, 8vw, 100px); }
+.account-intro h1,
+.dashboard-heading h1 { margin: 0; font: 700 clamp(48px, 7vw, 82px)/0.95 var(--display); text-transform: uppercase; }
+.account-intro > p:last-child { max-width: 420px; color: var(--muted); line-height: 1.7; }
+.account-panel { padding: 28px; border: 1px solid var(--line); border-radius: 4px; background: rgba(13, 17, 24, 0.84); }
+.form-stack { display: grid; gap: 18px; }
+.form-field { display: grid; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+.form-field input:focus,
+.form-field select:focus,
+.status-date-control select:focus,
+.status-date-control input:focus { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.account-submit { justify-content: center; width: 100%; min-height: 46px; }
+.account-submit:disabled { opacity: 0.65; cursor: wait; }
+.account-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.text-button { padding: 4px 0; border: 0; background: transparent; color: var(--yellow); font-size: 12px; text-align: left; }
+.text-button:hover { text-decoration: underline; }
+.account-feedback,
+.dashboard-feedback { min-height: 22px; margin: 18px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.account-feedback.is-error,
+.dashboard-feedback.is-error { color: #ff9999; }
+.account-feedback.is-success,
+.dashboard-feedback.is-success { color: #7eecac; }
+.account-back { display: inline-block; margin-top: 10px; color: var(--muted); font-size: 12px; }
+
+.dashboard-shell { width: min(100%, 1180px); margin: 0 auto; }
+.dashboard-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.dashboard-heading .status-heading-copy { margin-bottom: 0; }
+.dashboard-heading > .nav-pill { flex: 0 0 auto; }
+.dashboard-section { margin-top: 54px; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.section-heading h2,
+.gamer-card h2 { margin: 0; font: 600 34px/1 var(--display); text-transform: uppercase; }
+.section-heading .eyebrow,
+.gamer-card .eyebrow { margin: 0 0 8px; }
+.gamer-card { padding: 28px; border: 1px solid rgba(230, 251, 86, 0.35); border-radius: 4px; background: linear-gradient(115deg, rgba(230, 251, 86, 0.09), rgba(13, 17, 24, 0.88) 48%); }
+.gamer-card-title { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+.gamer-id { padding: 9px 12px; border: 1px solid rgba(230, 251, 86, 0.36); color: var(--yellow); font: 600 15px var(--display); letter-spacing: 0.06em; white-space: nowrap; }
+.gamer-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: 28px 0 0; padding-top: 20px; border-top: 1px solid var(--line); }
+.gamer-stats div { min-width: 0; }
+.gamer-stats dt { color: var(--muted); font-size: 12px; }
+.gamer-stats dd { margin: 7px 0 0; font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.profile-form { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 14px; }
+.profile-form .nav-pill { min-height: 46px; }
+.table-wrap { overflow-x: auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+th, td { padding: 14px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); vertical-align: middle; }
+th { color: var(--muted); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+td { max-width: 300px; }
+.table-cell-input { width: 140px; min-height: 34px; padding: 0 8px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 3px; background: #111820; color: var(--text); font: 500 12px var(--body); }
+tbody tr:last-child td { border-bottom: 0; }
+.table-action { margin: 2px 8px 2px 0; padding: 6px 9px; border: 1px solid rgba(230, 251, 86, 0.34); border-radius: 3px; background: rgba(230, 251, 86, 0.08); color: var(--yellow); font-size: 11px; text-transform: capitalize; }
+.table-action:hover { background: rgba(230, 251, 86, 0.18); }
+.table-action.is-danger { border-color: rgba(255, 91, 91, 0.4); color: #ff9999; }
+.empty-state { margin: 18px 0; padding: 18px; border-left: 3px solid var(--yellow); background: rgba(255, 255, 255, 0.035); color: var(--muted); line-height: 1.6; }
+.admin-toolbar,
+.filter-row { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+.admin-toolbar { margin: 28px 0 20px; }
+.admin-toolbar .form-field { min-width: 180px; }
+.admin-toolbar > .nav-pill { min-height: 46px; }
+.filter-row { margin-bottom: 16px; }
+.filter-row .form-field { min-width: 170px; }
+.table-search { display: grid; gap: 8px; min-width: min(100%, 260px); color: var(--muted); font-size: 11px; font-weight: 700; }
+.table-search input { min-height: 40px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px; background: #111820; color: var(--text); font: 500 13px var(--body); }
+.metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.metric-item { min-height: 105px; padding: 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.metric-item span { display: block; color: var(--muted); font-size: 11px; }
+.metric-item strong { display: block; margin-top: 12px; font-size: 21px; overflow-wrap: anywhere; }
+.inline-form { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+.inline-form .form-field { min-width: 150px; flex: 1 1 150px; }
+.inline-form > .nav-pill { min-height: 46px; flex: 0 0 auto; }
+.console-list { display: grid; gap: 10px; }
+.console-row { display: grid; grid-template-columns: 1.3fr 1fr 0.75fr auto auto; align-items: end; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+.checkbox-field { display: flex; align-items: center; gap: 8px; min-height: 46px; color: var(--muted); font-size: 12px; }
+.checkbox-field input { accent-color: var(--yellow); }
+
+@media (max-width: 840px) {
+  .account-shell { grid-template-columns: 1fr; max-width: 600px; gap: 26px; }
+  .account-intro h1 { font-size: 62px; }
+  .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .console-row { grid-template-columns: 1fr 1fr; }
+  .console-row .form-field:first-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .account-page,
+  .dashboard-page { padding: calc(var(--header-height) + 30px) 18px 50px; }
+  .account-panel { padding: 20px; }
+  .dashboard-heading,
+  .section-heading { align-items: stretch; flex-direction: column; }
+  .dashboard-heading h1 { font-size: 56px; }
+  .dashboard-heading > .nav-pill { align-self: start; }
+  .status-filters { flex-direction: column; }
+  .status-filters .status-date-control { min-width: 0; }
+  .gamer-card { padding: 19px; }
+  .gamer-card-title { align-items: start; flex-direction: column; }
+  .gamer-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 19px 14px; }
+  .profile-form { grid-template-columns: 1fr; }
+  .profile-form .nav-pill { justify-self: start; }
+  .admin-toolbar { align-items: stretch; flex-direction: column; }
+  .admin-toolbar .form-field { min-width: 0; }
+  .section-heading .table-search { width: 100%; }
+  .metric-item { min-height: 92px; padding: 12px; }
+  .metric-item strong { font-size: 18px; }
+}
