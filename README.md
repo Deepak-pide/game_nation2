@@ -6,15 +6,15 @@ Game Nation is a Vite multi-page site using Supabase Auth, PostgreSQL, RLS, and 
 
 1. Copy `.env.example` to `.env` and set `VITE_SUPABASE_PUBLISHABLE_KEY` to the project's **publishable** key. The Supabase project URL is already configured in the example. The key was not included in the request, so it must be copied from the project's API settings. Never put a database password, secret key, or service-role key in this file.
 2. In the Supabase SQL Editor for project `kbzkwojpzcolyduzctfq`, run the files in `supabase/migrations/` in filename order. This creates the schema and security policies, provisions the two initial consoles at ₹80/hour, and assigns the requested admin role to the confirmed `dg3667610@gmail.com` account if it already exists.
-3. Enable Email in Supabase Authentication. Set the Site URL and allowlist the local and production account page URLs, for example `http://localhost:5173/account.html` and `https://YOUR_DOMAIN/account.html`. Email confirmation is recommended and is required before the configured admin email receives admin privileges.
-4. Start the site:
+3. Enable Email in Supabase Authentication. To skip confirmation as requested, turn off **Confirm email** under Authentication → Sign In / Providers → Email. Set the Site URL and allowlist local and production account page URLs, for example `http://localhost:5173/account.html` and `https://YOUR_DOMAIN/account.html`.
+4. Register `dg3667610@gmail.com` if it does not already exist. Run the third migration, `202610110003_admin_initialization.sql`, in the SQL Editor to grant that account the admin role through a trusted database operation.
+5. Start the site:
 
    ```powershell
    npm install
    npm run dev
    ```
 
-5. Register the admin email and confirm it. If the account already exists, run the migration and verify its email in Supabase Auth. The database trigger synchronizes confirmed email and role; registration data and the browser cannot assign a role.
 6. Sign into the admin dashboard, review console rates, and add the actual dates/times under **Slot availability**. No opening hours are invented or seeded.
 
 ## Security and behavior

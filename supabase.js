@@ -25,9 +25,13 @@ export const formatMoney = (amount) => new Intl.NumberFormat(undefined, {
 
 export const showMessage = (element, message, isError = false) => {
   if (!element) return;
-  element.textContent = message;
+  const text = String(message || '');
+  const missingSchema = /PGRST205|could not find the table|schema cache/i.test(text);
+  element.textContent = missingSchema
+    ? 'Connected to Supabase, but the Game Nation database is not installed yet. Run the SQL migrations in supabase/migrations/ in order, then reload this page.'
+    : text;
   element.classList.toggle('is-error', isError);
-  element.classList.toggle('is-success', Boolean(message) && !isError);
+  element.classList.toggle('is-success', Boolean(text) && !isError);
 };
 
 export const getCurrentUser = async () => {

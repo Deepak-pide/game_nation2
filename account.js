@@ -9,6 +9,7 @@ const authSubmit = document.getElementById('authSubmit');
 const switchAuth = document.getElementById('switchAuth');
 const forgotPassword = document.getElementById('forgotPassword');
 let authMode = 'signin';
+let authSubmitting = false;
 
 const setBusy = (button, busy, idleText) => {
   button.disabled = busy;
@@ -38,35 +39,53 @@ switchAuth.addEventListener('click', () => setAuthMode(authMode === 'signin' ? '
 
 authForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (authSubmitting) return;
   if (!supabase) return showMessage(accountFeedback, configurationError, true);
   const form = new FormData(authForm);
   const email = String(form.get('email')).trim();
   const password = String(form.get('password'));
+  const fullName = String(form.get('full_name') || '').trim();
+  if (authMode === 'signup' && !fullName) {
+    return showMessage(accountFeedback, 'Enter your full name to create an account.', true);
+  }
+  if (password.length < 8) {
+    return showMessage(accountFeedback, 'Password must be at least 8 characters.', true);
+  }
+
+  authSubmitting = true;
   setBusy(authSubmit, true, '');
+  try {
+    const registering = authMode === 'signup';
+    const result = registering
+      ? await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: new URL('account.html', window.location.href).toString(),
+        },
+      })
+      : await supabase.auth.signInWithPassword({ email, password });
 
-  const result = authMode === 'signup'
-    ? await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: String(form.get('full_name')).trim() },
-        emailRedirectTo: new URL('account.html', window.location.href).toString(),
-      },
-    })
-    : await supabase.auth.signInWithPassword({ email, password });
+    if (result.error) throw result.error;
+    if (registering && !result.data.user) {
+      throw new Error('Supabase did not return an account. Please try again.');
+    }
 
-  if (result.error) {
-    showMessage(accountFeedback, result.error.message, true);
+    if (registering && !result.data.session) {
+      showMessage(accountFeedback, 'Supabase did not start a session. To skip email confirmation, disable “Confirm email” in Supabase Authentication settings, then try again.', true);
+      return;
+    }
+
+    showMessage(accountFeedback, registering ? 'Account created. Opening your dashboard…' : 'Signed in. Opening your dashboard…');
+    window.location.assign('dashboard.html');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Registration could not be completed. Please try again.';
+    showMessage(accountFeedback, message, true);
+  } finally {
+    authSubmitting = false;
     setBusy(authSubmit, false, authMode === 'signup' ? 'Create account' : 'Sign in');
-    return;
   }
-
-  if (authMode === 'signup' && !result.data.session) {
-    showMessage(accountFeedback, 'Check your email to confirm your account, then sign in.');
-    setBusy(authSubmit, false, 'Create account');
-    return;
-  }
-  window.location.assign('dashboard.html');
 });
 
 forgotPassword.addEventListener('click', async () => {
