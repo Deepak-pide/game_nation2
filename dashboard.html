@@ -13,8 +13,9 @@
   <body>
     <header class="site-header">
       <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
-      <nav class="main-nav" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="status.html">Book</a></nav>
-      <div class="header-actions"><button class="text-button" id="signOutButton" type="button">Sign out</button></div>
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="tournaments.html">Tournaments</a><a href="status.html">Book</a></nav>
+      <div class="header-actions" id="actionNavigation"><button class="text-button" id="signOutButton" type="button">Sign out</button></div>
     </header>
 
     <main class="dashboard-page">
@@ -27,16 +28,52 @@
 
         <section id="gamerView" hidden>
           <article class="gamer-card">
-            <div class="gamer-card-title"><div><p class="eyebrow"><span></span> Your gamer card</p><h2 id="gamerName">Player</h2></div><span class="gamer-id" id="gamerId">GN-...</span></div>
-            <dl class="gamer-stats"><div><dt>Member since</dt><dd id="memberSince">—</dd></div><div><dt>Total bookings</dt><dd id="totalBookings">0</dd></div><div><dt>Completed sessions</dt><dd id="completedSessions">0</dd></div><div><dt>Spending</dt><dd id="gamerSpending">₹0</dd></div></dl>
-          </article>
-          <section class="dashboard-section">
-            <div class="section-heading"><div><p class="eyebrow"><span></span> Account details</p><h2>Your profile</h2></div></div>
-            <form id="profileForm" class="profile-form">
-              <label class="form-field">Full name<input name="full_name" maxlength="80" required /></label>
+            <div class="gamer-card-title">
+              <div><p class="eyebrow"><span></span> Your gamer card</p><h2 id="gamerName">Player</h2></div>
+              <div class="gamer-card-actions">
+                <span class="gamer-id" id="gamerId">GN-...</span>
+                <button class="icon-button" id="editProfileButton" type="button" aria-label="Edit gamer card" aria-expanded="false" aria-controls="profileForm">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="gamer-tags" id="gamerTags" aria-label="Game tags"></div>
+            <form id="profileForm" class="profile-form gamer-profile-editor" hidden>
+              <label class="form-field">Gamer name<input name="full_name" maxlength="80" required /></label>
               <label class="form-field">Phone<input name="phone" type="tel" maxlength="30" autocomplete="tel" /></label>
-              <button class="nav-pill" type="submit">Save profile</button>
+              <fieldset class="game-tag-field">
+                <legend>Game tags <span>Choose up to 5</span></legend>
+                <div class="game-tag-options" id="gameTagOptions"></div>
+              </fieldset>
+              <div class="profile-editor-actions">
+                <button class="nav-pill" type="submit">Save changes</button>
+                <button class="text-button" id="cancelProfileEdit" type="button">Cancel</button>
+              </div>
             </form>
+            <dl class="gamer-stats"><div><dt>Member since</dt><dd id="memberSince">—</dd></div><div><dt>Total bookings</dt><dd id="totalBookings">0</dd></div><div><dt>Completed sessions</dt><dd id="completedSessions">0</dd></div><div class="gamer-playtime-stat"><dt>Available playtime</dt><dd id="availablePlaytime">0 min</dd><small id="playtimeConversion"></small></div></dl>
+          </article>
+          <section class="dashboard-section ranking-section">
+            <div class="section-heading">
+              <div><p class="eyebrow"><span></span> Community leaderboard</p><h2>Player rankings</h2></div>
+              <label class="form-field ranking-filter">Rank by
+                <select id="rankingSort">
+                  <option value="most_played">Most played</option>
+                  <option value="most_bookings">Most bookings</option>
+                  <option value="most_hours">Most playtime</option>
+                </select>
+              </label>
+            </div>
+            <p class="ranking-explainer">Rankings use completed sessions, all bookings, or completed playtime.</p>
+            <div class="table-wrap">
+              <table class="ranking-table"><thead><tr><th>Rank</th><th>Player</th><th>Game tags</th><th>Sessions</th><th>Bookings</th><th>Playtime</th></tr></thead><tbody id="gamerRankings"></tbody></table>
+            </div>
+            <p class="empty-state" id="gamerRankingsEmpty" hidden>No players have booked a session yet.</p>
+          </section>
+          <section class="dashboard-section gamer-tournament-record">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Tournament record</p><h2>Your competitive profile</h2></div><a class="tournament-action-link" href="tournaments.html">Explore tournaments</a></div>
+            <div class="gamer-tournament-metrics" id="gamerTournamentMetrics"></div>
+            <div class="table-wrap"><table class="tournament-leaderboard"><thead><tr><th>Tournament</th><th>Game</th><th>Status</th><th>Matches</th><th>Record</th><th>Points</th></tr></thead><tbody id="gamerTournamentHistory"></tbody></table></div>
+            <p class="empty-state" id="gamerTournamentHistoryEmpty" hidden>No tournament history yet.</p>
           </section>
           <section class="dashboard-section">
             <div class="section-heading"><div><p class="eyebrow"><span></span> Your activity</p><h2>Booking history</h2></div></div>
@@ -49,26 +86,79 @@
           <div class="admin-toolbar"><label class="form-field">From<input id="analyticsFrom" type="date" /></label><label class="form-field">To<input id="analyticsTo" type="date" /></label><button class="nav-pill" id="refreshAnalytics" type="button">Refresh report</button></div>
           <div class="metrics-grid" id="analyticsMetrics"></div>
 
-          <section class="dashboard-section">
+          <section class="dashboard-section admin-tournaments admin-operation-card admin-accent-purple">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Competitive events</p><h2>Tournament management</h2></div></div>
+            <form id="tournamentForm" class="tournament-admin-form">
+              <input name="id" type="hidden" />
+              <label class="form-field">Tournament name<input name="name" maxlength="120" required /></label>
+              <label class="form-field">Game<input name="game" maxlength="80" required placeholder="EA FC 26" /></label>
+              <label class="form-field">Tournament date<input name="tournament_at" type="datetime-local" required /></label>
+              <label class="form-field">Registration deadline<input name="registration_deadline" type="datetime-local" required /></label>
+              <label class="form-field">Maximum players<input name="max_players" type="number" min="2" max="512" required value="16" /></label>
+              <label class="form-field">Points per win<input name="points_per_win" type="number" min="0" required value="10" /></label>
+              <label class="form-field">Entry details<input name="entry_details" maxlength="160" value="Free entry" /></label>
+              <label class="form-field">Prize / points<input name="prize_details" maxlength="160" value="Tournament points" /></label>
+              <label class="form-field tournament-form-wide">Description<textarea name="description" rows="3" maxlength="1500"></textarea></label>
+              <label class="form-field tournament-form-wide">Rules<textarea name="rules" rows="4" maxlength="3000"></textarea></label>
+              <label class="checkbox-field tournament-feature-toggle"><input name="featured" type="checkbox" /> Feature on homepage in purple</label>
+              <div class="tournament-form-actions tournament-form-wide"><button class="nav-pill" type="submit">Create tournament</button><button class="table-action" id="cancelTournamentEdit" type="button" hidden>Cancel edit</button></div>
+            </form>
+            <p class="dashboard-feedback" id="tournamentAdminFeedback" role="status" aria-live="polite"></p>
+            <div id="adminTournamentList" class="admin-tournament-list"></div>
+            <section id="adminTournamentDetail" class="admin-tournament-detail" hidden>
+              <div class="section-heading"><div><p class="eyebrow"><span></span> Selected tournament</p><h3 id="adminTournamentTitle"></h3></div><span id="adminTournamentStatus" class="tournament-status"></span></div>
+              <div id="adminTournamentActions" class="admin-tournament-actions"></div>
+              <h4>Registered players <span id="adminParticipantCount"></span></h4>
+              <div id="adminParticipantList" class="admin-participant-list"></div>
+              <div class="admin-match-heading"><h4>First-round matchups</h4><p>Only registered players can be assigned. Clear an existing slot before moving a player.</p></div>
+              <div id="adminMatchupList" class="admin-matchup-list"></div>
+              <div class="admin-match-heading"><h4>Match and points audit</h4><p>Confirmed score versions, awards, and correction reversals.</p></div>
+              <div id="adminTournamentAudit" class="admin-tournament-audit"></div>
+            </section>
+          </section>
+
+          <section class="dashboard-section admin-operation-card admin-accent-blue">
             <div class="section-heading"><div><p class="eyebrow"><span></span> Operations</p><h2>Bookings</h2></div><label class="table-search">Search bookings<input id="bookingSearch" type="search" placeholder="Game ID, gamer, console" /></label></div>
             <div class="filter-row"><label class="form-field">Status<select id="bookingStatusFilter"><option value="all">All statuses</option><option>pending</option><option>approved</option><option>rejected</option><option>cancelled</option><option>completed</option></select></label><label class="form-field">Date<input id="bookingDateFilter" type="date" /></label></div>
             <div class="table-wrap"><table><thead><tr><th>Gamer</th><th>Console</th><th>Session</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead><tbody id="adminBookings"></tbody></table></div>
             <p class="empty-state" id="adminBookingsEmpty" hidden>No bookings match these filters.</p>
           </section>
 
-          <section class="dashboard-section">
-            <div class="section-heading"><div><p class="eyebrow"><span></span> Member records</p><h2>Gamers</h2></div><label class="table-search">Search gamers<input id="gamerSearch" type="search" placeholder="Name, email, Game ID" /></label></div>
-            <div class="table-wrap"><table><thead><tr><th>Game ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Member since</th><th>Bookings</th><th></th></tr></thead><tbody id="adminGamers"></tbody></table></div>
+          <section class="dashboard-section admin-operation-card admin-accent-green">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Member records</p><h2>Gamers &amp; playtime credit</h2></div><label class="table-search">Search gamers<input id="gamerSearch" type="search" placeholder="Name, email, Game ID" /></label></div>
+            <div class="table-wrap"><table><thead><tr><th>Game ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Member since</th><th>Bookings</th><th>Available time</th><th>Add credit (₹)</th><th></th></tr></thead><tbody id="adminGamers"></tbody></table></div>
             <p class="empty-state" id="adminGamersEmpty" hidden>No gamer records match this search.</p>
           </section>
 
-          <section class="dashboard-section">
+          <section class="dashboard-section admin-operation-card admin-accent-amber">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Playtime wallet</p><h2>Money-to-time conversion</h2></div></div>
+            <form id="walletRateForm" class="inline-form">
+              <label class="form-field">Wallet credit for one hour (₹)<input name="hourly_rate" type="number" min="0.01" max="100000" step="0.01" required /></label>
+              <button class="nav-pill" type="submit">Save conversion rate</button>
+            </form>
+            <p class="dashboard-feedback" id="walletAdminFeedback" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="dashboard-section admin-operation-card admin-accent-cyan">
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Game library</p><h2>Manage more games</h2></div></div>
+            <form id="addGameForm" class="tournament-admin-form">
+              <label class="form-field">Game title<input name="title" maxlength="100" required /></label>
+              <label class="form-field">Player mode<select name="mode" required><option value="solo">Solo · 1 player</option><option value="duo">Duo · 2 players</option><option value="squad">Squad · 3–4 players</option></select></label>
+              <label class="form-field tournament-form-wide">Cover image URL<input name="image_url" type="url" maxlength="1000" placeholder="https://…" /></label>
+              <label class="form-field">Rating (1–5)<input name="rating" type="number" min="1" max="5" step="0.1" value="4.5" required /></label>
+              <div class="tournament-form-actions"><button class="nav-pill" type="submit">Add game to library</button></div>
+            </form>
+            <p class="dashboard-feedback" id="gameAdminFeedback" role="status" aria-live="polite"></p>
+            <div id="adminGameList" class="admin-game-list"></div>
+          </section>
+
+          <section class="dashboard-section admin-operation-card admin-accent-orange">
             <div class="section-heading"><div><p class="eyebrow"><span></span> Equipment</p><h2>Consoles</h2></div></div>
             <form id="consoleForm" class="inline-form"><label class="form-field">Console name<input name="name" maxlength="80" required placeholder="PlayStation 5 - 03" /></label><label class="form-field">Platform<input name="platform" maxlength="80" required value="PlayStation 5" /></label><label class="form-field">Hourly rate (₹)<input name="hourly_rate" type="number" min="0" step="0.01" required /></label><button class="nav-pill" type="submit">Add console</button></form>
             <div class="console-list" id="consoleList"></div>
           </section>
 
-          <section class="dashboard-section">
+          <section class="dashboard-section admin-operation-card admin-accent-violet">
             <div class="section-heading"><div><p class="eyebrow"><span></span> Scheduling</p><h2>Slot availability</h2></div></div>
             <form id="availabilityForm" class="inline-form">
               <label class="form-field">Console<select name="console_id" id="availabilityConsole" required></select></label>
@@ -84,5 +174,6 @@
       </div>
     </main>
     <script type="module" src="dashboard.js"></script>
+    <script type="module" src="navigation.js"></script>
   </body>
 </html>

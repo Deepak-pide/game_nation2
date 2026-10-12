@@ -19,15 +19,20 @@
         <span class="brand-name">GAME <b>NATION</b></span>
       </a>
 
-      <nav class="main-nav" aria-label="Main navigation">
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" id="mainNavigation" aria-label="Main navigation">
         <a href="index.html?skipIntro=1#top">Games</a>
         <a href="index.html#pricing">Pricing</a>
         <a href="more-games.html" class="active">Explore</a>
+        <a href="tournaments.html">Tournaments</a>
         <a href="status.html">Status</a>
         <a href="index.html#contact">Support</a>
       </nav>
 
-      <div class="header-actions">
+      <div class="header-actions" id="actionNavigation">
         <a class="explore-link" href="index.html?skipIntro=1#top">Back to Home</a>
         <a class="explore-link" href="account.html">Account</a>
         <a class="mobile-status-link" href="status.html">Status</a>
@@ -47,6 +52,7 @@
           <button class="tab-button" type="button" role="tab" aria-selected="false" data-tab="duo">Duo — 2 players</button>
           <button class="tab-button" type="button" role="tab" aria-selected="false" data-tab="squad">Squad — 3–4 players</button>
         </div>
+        <p class="game-library-feedback" id="gameLibraryFeedback" role="status" aria-live="polite"></p>
 
         <div class="tab-panel active" id="solo" role="tabpanel">
           <div class="game-grid">
@@ -539,5 +545,7 @@
     </div>
 
     <script type="module" src="script.js"></script>
+    <script type="module" src="more-games-data.js"></script>
+    <script type="module" src="navigation.js"></script>
   </body>
 </html>

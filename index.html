@@ -23,14 +23,19 @@
         <span class="brand-name">GAME <b>NATION</b></span>
       </a>
 
-      <nav class="main-nav" aria-label="Main navigation">
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" id="mainNavigation" aria-label="Main navigation">
         <a href="#top">Games</a>
         <a href="#pricing">Pricing</a>
         <a href="more-games.html">Explore</a>
+        <a href="tournaments.html">Tournaments</a>
         <a href="status.html">Status</a>
       </nav>
 
-      <div class="header-actions">
+      <div class="header-actions" id="actionNavigation">
         <a class="explore-link" href="more-games.html">Explore More Games</a>
         <a class="explore-link" href="account.html">Account</a>
         <a class="mobile-status-link" href="status.html">Status</a>
@@ -54,6 +59,27 @@
         <div class="hero-actions">
           <button class="nav-pill hero-scroll-btn" type="button" data-scroll-target="#gta-showcase">Intro</button>
         </div>
+      </div>
+    </section>
+
+    <section class="featured-tournament-section" id="featuredTournament" aria-labelledby="featuredName" hidden>
+      <div class="featured-tournament-shell">
+        <div class="featured-tournament-content">
+          <div class="featured-tournament-heading">
+            <div><p class="eyebrow"><span></span> Featured Tournament · <span id="featuredGame"></span></p><h2 id="featuredName">Tournament</h2></div>
+            <span id="featuredStatus" class="tournament-status"></span>
+          </div>
+          <p id="featuredDescription" class="featured-tournament-description"></p>
+          <dl id="featuredFacts" class="featured-tournament-facts"></dl>
+          <div class="featured-tournament-actions">
+            <a class="nav-pill" id="featuredRegister" href="#" hidden>Register</a>
+            <a class="tournament-action-link" id="featuredBracket" href="#" hidden>View bracket</a>
+            <a class="tournament-action-link" id="featuredResults" href="#" hidden>View results</a>
+            <a class="tournament-action-link" id="featuredDetails" href="#">Tournament details</a>
+          </div>
+          <p class="featured-tournament-feedback" id="featuredTournamentFeedback" role="status" aria-live="polite"></p>
+        </div>
+        <div class="featured-tournament-art" aria-hidden="true"><span>GN</span><strong>ARENA</strong></div>
       </div>
     </section>
 
@@ -230,6 +256,7 @@
           <a href="#top">Games</a>
           <a href="#pricing">Pricing</a>
           <a href="more-games.html">Explore library</a>
+          <a href="tournaments.html">Tournaments</a>
         </div>
 
         <div class="footer-column footer-contact-column">
@@ -268,5 +295,7 @@
     </div>
 
     <script type="module" src="script.js"></script>
+    <script type="module" src="tournament-feature.js"></script>
+    <script type="module" src="navigation.js"></script>
   </body>
 </html>

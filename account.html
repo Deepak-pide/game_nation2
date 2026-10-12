@@ -13,8 +13,9 @@
   <body>
     <header class="site-header">
       <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
-      <nav class="main-nav" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="status.html">Status</a></nav>
-      <div class="header-actions"><a class="explore-link" href="dashboard.html">Gamer dashboard</a></div>
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="tournaments.html">Tournaments</a><a href="status.html">Status</a></nav>
+      <div class="header-actions" id="actionNavigation"><a class="explore-link" href="dashboard.html">Gamer dashboard</a></div>
     </header>
 
     <main class="account-page">
@@ -41,5 +42,6 @@
     </main>
 
     <script type="module" src="account.js"></script>
+    <script type="module" src="navigation.js"></script>
   </body>
 </html>

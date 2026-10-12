@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="View tournament registration, participants, knockout bracket, matches, and player standings." />
+    <title>Game Nation | Tournament</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="tournaments.html">Tournaments</a><a href="status.html">Book</a></nav>
+      <div class="header-actions" id="actionNavigation"><a class="explore-link" href="account.html">Account</a></div>
+    </header>
+    <main class="tournament-page">
+      <div class="tournament-shell">
+        <a class="tournament-back" href="tournaments.html">← All tournaments</a>
+        <p id="tournamentFeedback" class="dashboard-feedback" role="status" aria-live="polite"></p>
+        <section id="tournamentDetail" hidden>
+          <article class="tournament-detail-card">
+            <div class="tournament-detail-heading">
+              <div><p class="eyebrow"><span></span> <span id="detailGame">Tournament</span></p><h1 id="detailName">Tournament</h1></div>
+              <span id="detailStatus" class="tournament-status"></span>
+            </div>
+            <p id="detailDescription" class="tournament-description"></p>
+            <dl id="tournamentFacts" class="tournament-facts"></dl>
+            <div class="tournament-detail-actions">
+              <button class="nav-pill" id="registrationButton" type="button" hidden></button>
+              <a class="nav-pill tournament-action-link" href="#bracket-panel" id="bracketLink">View bracket</a>
+              <a class="tournament-action-link" href="#leaderboard-panel" id="resultsLink">View results</a>
+            </div>
+          </article>
+          <nav class="tournament-tabs" role="tablist" aria-label="Tournament details">
+            <button type="button" role="tab" aria-selected="true" aria-controls="overview-panel" id="overview-tab">Overview</button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="participants-panel" id="participants-tab">Participants</button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="bracket-panel" id="bracket-tab">Bracket</button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="matches-panel" id="matches-tab">Matches</button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="leaderboard-panel" id="leaderboard-tab">Leaderboard</button>
+          </nav>
+          <section class="tournament-tab-panel" id="overview-panel" role="tabpanel" aria-labelledby="overview-tab">
+            <div class="tournament-overview-grid">
+              <article class="tournament-info-card"><h2>About this tournament</h2><p id="overviewDescription"></p></article>
+              <article class="tournament-info-card"><h2>Rules</h2><p id="detailRules"></p></article>
+            </div>
+          </section>
+          <section class="tournament-tab-panel" id="participants-panel" role="tabpanel" aria-labelledby="participants-tab" hidden>
+            <div class="section-heading"><div><p class="eyebrow"><span></span> <span id="participantCount">0 players</span></p><h2>Registered players</h2></div></div>
+            <ol id="participantList" class="participant-list"></ol>
+            <p class="empty-state" id="participantsEmpty" hidden>No players have registered yet.</p>
+          </section>
+          <section class="tournament-tab-panel" id="bracket-panel" role="tabpanel" aria-labelledby="bracket-tab" hidden>
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Knockout stage</p><h2>Bracket</h2></div></div>
+            <div id="bracketView" class="bracket-view"></div>
+            <p class="empty-state" id="bracketEmpty" hidden>The bracket will appear after registration closes.</p>
+          </section>
+          <section class="tournament-tab-panel" id="matches-panel" role="tabpanel" aria-labelledby="matches-tab" hidden>
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Match schedule</p><h2>Matches</h2></div></div>
+            <div id="matchList" class="tournament-match-list"></div>
+            <p class="empty-state" id="matchesEmpty" hidden>No matches have been scheduled yet.</p>
+          </section>
+          <section class="tournament-tab-panel" id="leaderboard-panel" role="tabpanel" aria-labelledby="leaderboard-tab" hidden>
+            <div class="section-heading"><div><p class="eyebrow"><span></span> Tournament standings</p><h2>Player leaderboard</h2></div></div>
+            <div class="table-wrap"><table class="tournament-leaderboard"><thead><tr><th>Rank</th><th>Player</th><th>Points</th><th>Wins</th><th>Losses</th></tr></thead><tbody id="detailLeaderboard"></tbody></table></div>
+            <p class="empty-state" id="detailLeaderboardEmpty" hidden>No tournament points have been earned yet.</p>
+          </section>
+        </section>
+        <p class="empty-state" id="tournamentNotFound" hidden>This tournament could not be found. Return to the tournament list.</p>
+      </div>
+    </main>
+    <script type="module" src="tournament.js"></script>
+    <script type="module" src="navigation.js"></script>
+  </body>
+</html>

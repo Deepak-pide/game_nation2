@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Join live and upcoming Game Nation tournaments, follow brackets, and see player rankings." />
+    <title>Game Nation | Tournaments</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="tournaments.html" aria-current="page">Tournaments</a><a href="status.html">Book</a></nav>
+      <div class="header-actions" id="actionNavigation"><a class="explore-link" href="account.html">Account</a></div>
+    </header>
+    <main class="tournament-page">
+      <div class="tournament-shell">
+        <section class="tournament-heading">
+          <div><p class="eyebrow"><span></span> Game Nation arena</p><h1>TOURNAMENTS</h1><p class="status-heading-copy">Compete, climb the rankings, and follow every match.</p></div>
+          <a class="nav-pill" href="dashboard.html">Gamer dashboard</a>
+        </section>
+        <p id="tournamentFeedback" class="dashboard-feedback" role="status" aria-live="polite"></p>
+        <div class="tournament-filters" role="group" aria-label="Filter tournaments">
+          <button class="tournament-filter is-active" type="button" data-filter="upcoming" aria-pressed="true">Upcoming</button>
+          <button class="tournament-filter" type="button" data-filter="live" aria-pressed="false">Live</button>
+          <button class="tournament-filter" type="button" data-filter="completed" aria-pressed="false">Completed</button>
+          <button class="tournament-filter" type="button" data-filter="all" aria-pressed="false">All</button>
+        </div>
+        <div id="tournamentList" class="tournament-grid" aria-live="polite"></div>
+        <p class="empty-state" id="tournamentEmpty" hidden>No tournaments in this view yet.</p>
+        <section class="tournament-leaderboard-section">
+          <div class="section-heading">
+            <div><p class="eyebrow"><span></span> Season standings</p><h2>Elite players</h2></div>
+            <label class="form-field tournament-game-filter">Game
+              <select id="leaderboardGame"><option value="">All games</option></select>
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table class="tournament-leaderboard"><thead><tr><th>Rank</th><th>Player</th><th>Points</th><th>Wins</th><th>Losses</th><th>Played</th><th>Tournament wins</th></tr></thead><tbody id="tournamentLeaderboard"></tbody></table>
+          </div>
+          <p class="empty-state" id="tournamentLeaderboardEmpty" hidden>No tournament points have been earned yet.</p>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="tournaments.js"></script>
+    <script type="module" src="navigation.js"></script>
+  </body>
+</html>

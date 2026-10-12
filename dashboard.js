@@ -1,8 +1,22 @@
 import { configurationError, formatMoney, getCurrentUser, showMessage, supabase } from './supabase.js';
+import { initializeTournamentAdmin } from './tournament-admin.js';
+import { loadTournamentProfile } from './tournament-profile.js';
+import { initializeGameAdmin } from './game-admin.js';
 
 const feedback = document.getElementById('dashboardFeedback');
 const gamerView = document.getElementById('gamerView');
 const adminView = document.getElementById('adminView');
+const gameTags = [
+  { id: 'fps', icon: '🎯', label: 'FPS' },
+  { id: 'sports', icon: '⚽', label: 'Sports' },
+  { id: 'battle-royale', icon: '🪂', label: 'Battle Royale' },
+  { id: 'racing', icon: '🏎️', label: 'Racing' },
+  { id: 'rpg', icon: '🛡️', label: 'RPG' },
+  { id: 'fighting', icon: '🥊', label: 'Fighting' },
+  { id: 'strategy', icon: '♟️', label: 'Strategy' },
+];
+let leaderboardRequest = 0;
+let gamerWalletChannel;
 const dateToday = new Date();
 const localDate = (date) => {
   const year = date.getFullYear();
@@ -20,6 +34,7 @@ const makeCell = (text) => {
 const formatDateTime = (value) => new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium', timeStyle: 'short',
 }).format(new Date(value));
+const formatPlaytime = (minutes) => `${Math.floor(Number(minutes) / 60)} hr ${Number(minutes) % 60} min`;
 const startOfLocalDay = (value) => new Date(`${value}T00:00:00`);
 const isWithin = (date, from, to) => date >= from && date < to;
 const fetchAllRows = async (queryFactory) => {
@@ -33,6 +48,103 @@ const fetchAllRows = async (queryFactory) => {
     offset += 1000;
   }
 };
+const renderGameTags = (container, selectedTags) => {
+  container.replaceChildren();
+  const tags = gameTags.filter((tag) => selectedTags.includes(tag.id));
+  if (!tags.length) {
+    const empty = document.createElement('span');
+    empty.className = 'gamer-tags-empty';
+    empty.textContent = 'Add game tags to your card';
+    container.append(empty);
+    return;
+  }
+  for (const tag of tags) {
+    const chip = document.createElement('span');
+    chip.className = 'game-tag-chip';
+    chip.textContent = `${tag.icon} ${tag.label}`;
+    container.append(chip);
+  }
+};
+const initializeGameTagOptions = () => {
+  const options = document.getElementById('gameTagOptions');
+  options.replaceChildren();
+  for (const tag of gameTags) {
+    const label = document.createElement('label');
+    label.className = 'game-tag-option';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.name = 'game_tags';
+    input.value = tag.id;
+    const text = document.createElement('span');
+    text.textContent = `${tag.icon} ${tag.label}`;
+    label.append(input, text);
+    options.append(label);
+  }
+};
+const updateGameTagSelection = (selectedTags) => {
+  document.querySelectorAll('#gameTagOptions input[name="game_tags"]').forEach((input) => {
+    input.checked = selectedTags.includes(input.value);
+  });
+};
+const renderLeaderboard = async () => {
+  const request = ++leaderboardRequest;
+  const sort = document.getElementById('rankingSort').value;
+  const tableBody = document.getElementById('gamerRankings');
+  const emptyState = document.getElementById('gamerRankingsEmpty');
+  tableBody.replaceChildren();
+  tableBody.setAttribute('aria-busy', 'true');
+  emptyState.hidden = true;
+
+  let data;
+  let error;
+  try {
+    ({ data, error } = await supabase.rpc('get_gamer_leaderboard', { p_sort: sort }));
+  } catch (requestError) {
+    if (request === leaderboardRequest) {
+      tableBody.setAttribute('aria-busy', 'false');
+      showMessage(feedback, requestError instanceof Error ? requestError.message : 'Could not load player rankings.', true);
+    }
+    return;
+  }
+  if (request !== leaderboardRequest) return;
+  tableBody.setAttribute('aria-busy', 'false');
+  if (error) {
+    showMessage(feedback, error.message, true);
+    return;
+  }
+  emptyState.hidden = data.length > 0;
+
+  for (const player of data) {
+    const row = document.createElement('tr');
+    if (player.is_current_user) row.className = 'ranking-current-player';
+    row.append(makeCell(`#${player.rank}`));
+    const name = document.createElement('td');
+    name.textContent = player.full_name || 'Player';
+    if (player.is_current_user) {
+      const currentPlayer = document.createElement('span');
+      currentPlayer.className = 'current-player-label';
+      currentPlayer.textContent = 'You';
+      name.append(currentPlayer);
+    }
+    row.append(name);
+    const tags = document.createElement('td');
+    tags.className = 'ranking-tags';
+    for (const tag of gameTags.filter((choice) => (player.game_tags || []).includes(choice.id))) {
+      const chip = document.createElement('span');
+      chip.className = 'game-tag-chip';
+      chip.textContent = `${tag.icon} ${tag.label}`;
+      tags.append(chip);
+    }
+    if (!tags.childElementCount) tags.textContent = '—';
+    row.append(tags);
+    row.append(
+      makeCell(player.completed_sessions),
+      makeCell(player.total_bookings),
+      makeCell(`${Number(player.playtime_hours).toFixed(1)} h`),
+    );
+    tableBody.append(row);
+  }
+};
 
 document.getElementById('signOutButton').addEventListener('click', async () => {
   if (!supabase) return window.location.assign('account.html');
@@ -44,7 +156,7 @@ document.getElementById('signOutButton').addEventListener('click', async () => {
 const showGamerDashboard = async (profile, user) => {
   gamerView.hidden = false;
   document.getElementById('dashboardTitle').textContent = `Welcome, ${profile.full_name || 'gamer'}`;
-  document.getElementById('dashboardIntro').textContent = 'Your Game ID, session history, and account details.';
+  document.getElementById('dashboardIntro').textContent = 'Your Game ID, gamer card, and session history.';
   let bookings;
   try {
     bookings = await fetchAllRows(() => supabase.from('bookings')
@@ -60,20 +172,71 @@ const showGamerDashboard = async (profile, user) => {
   document.getElementById('totalBookings').textContent = bookings.length;
   const completed = bookings.filter((booking) => booking.status === 'completed');
   document.getElementById('completedSessions').textContent = completed.length;
-  document.getElementById('gamerSpending').textContent = formatMoney(completed.reduce((sum, booking) => sum + Number(booking.total_price), 0));
+  await refreshGamerWallet(user.id);
 
   const profileForm = document.getElementById('profileForm');
   profileForm.elements.full_name.value = profile.full_name || '';
   profileForm.elements.phone.value = profile.phone || '';
-  profileForm.addEventListener('submit', async (event) => {
+  let selectedTags = Array.isArray(profile.game_tags) ? profile.game_tags : [];
+  initializeGameTagOptions();
+  updateGameTagSelection(selectedTags);
+  renderGameTags(document.getElementById('gamerTags'), selectedTags);
+
+  const editProfileButton = document.getElementById('editProfileButton');
+  const setProfileEditorOpen = (isOpen) => {
+    profileForm.hidden = !isOpen;
+    editProfileButton.setAttribute('aria-expanded', String(isOpen));
+    editProfileButton.setAttribute('aria-label', isOpen ? 'Close gamer card editor' : 'Edit gamer card');
+  };
+  editProfileButton.onclick = () => setProfileEditorOpen(profileForm.hidden);
+  document.getElementById('cancelProfileEdit').onclick = () => {
+    profileForm.elements.full_name.value = profile.full_name || '';
+    profileForm.elements.phone.value = profile.phone || '';
+    updateGameTagSelection(selectedTags);
+    setProfileEditorOpen(false);
+  };
+  document.getElementById('gameTagOptions').onchange = (event) => {
+    if (event.target.checked && profileForm.querySelectorAll('input[name="game_tags"]:checked').length > 5) {
+      event.target.checked = false;
+      showMessage(feedback, 'Choose up to 5 game tags.', true);
+    }
+  };
+  profileForm.onsubmit = async (event) => {
     event.preventDefault();
-    const { error: updateError } = await supabase.from('profiles').update({
-      full_name: profileForm.elements.full_name.value.trim(),
-      phone: profileForm.elements.phone.value.trim(),
-    }).eq('id', user.id);
-    showMessage(feedback, updateError ? updateError.message : 'Profile saved.', Boolean(updateError));
-    if (!updateError) document.getElementById('gamerName').textContent = profileForm.elements.full_name.value.trim();
-  });
+    const saveButton = profileForm.querySelector('[type="submit"]');
+    saveButton.disabled = true;
+    const nextTags = [...profileForm.querySelectorAll('input[name="game_tags"]:checked')].map((input) => input.value);
+    const nextName = profileForm.elements.full_name.value.trim();
+    const nextPhone = profileForm.elements.phone.value.trim();
+    try {
+      const { error: updateError } = await supabase.from('profiles').update({
+        full_name: nextName,
+        phone: nextPhone,
+        game_tags: nextTags,
+      }).eq('id', user.id);
+      if (updateError) {
+        showMessage(feedback, updateError.message, true);
+        return;
+      }
+      profile.full_name = nextName;
+      profile.phone = nextPhone;
+      profile.game_tags = nextTags;
+      selectedTags = nextTags;
+      document.getElementById('gamerName').textContent = nextName || 'Player';
+      document.getElementById('dashboardTitle').textContent = `Welcome, ${nextName || 'gamer'}`;
+      renderGameTags(document.getElementById('gamerTags'), nextTags);
+      setProfileEditorOpen(false);
+      showMessage(feedback, 'Gamer card saved.');
+      await renderLeaderboard();
+    } catch (updateError) {
+      showMessage(feedback, updateError instanceof Error ? updateError.message : 'Could not save gamer card.', true);
+    } finally {
+      saveButton.disabled = false;
+    }
+  };
+  document.getElementById('rankingSort').onchange = renderLeaderboard;
+  await renderLeaderboard();
+  await loadTournamentProfile(supabase, user.id);
 
   const rows = document.getElementById('gamerBookings');
   rows.replaceChildren();
@@ -99,14 +262,49 @@ const showGamerDashboard = async (profile, user) => {
   document.getElementById('gamerBookingsEmpty').hidden = bookings.length > 0;
 };
 
+const refreshGamerWallet = async (userId) => {
+  const { data, error } = await supabase.rpc('get_my_wallet_balance');
+  if (error) {
+    showMessage(feedback, error.message, true);
+    return;
+  }
+  const wallet = data[0];
+  if (!wallet) {
+    showMessage(feedback, 'Wallet conversion settings are not configured.', true);
+    return;
+  }
+  document.getElementById('availablePlaytime').textContent = formatPlaytime(wallet.available_minutes);
+  document.getElementById('playtimeConversion').textContent = `At ₹${Number(wallet.hourly_rate).toFixed(2)} per hour`;
+  if (userId && !gamerWalletChannel) {
+    gamerWalletChannel = supabase.channel(`gamer-wallet-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'wallet_transactions',
+        filter: `user_id=eq.${userId}`,
+      }, () => refreshGamerWallet(userId))
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'wallet_settings',
+        filter: 'singleton=eq.true',
+      }, () => refreshGamerWallet(userId))
+      .subscribe();
+  }
+};
+
 const loadAdminRecords = async () => {
-  const [profiles, bookings, consoles, slots] = await Promise.all([
+  const [profiles, bookings, consoles, slots, walletResult, rateResult] = await Promise.all([
     fetchAllRows(() => supabase.from('profiles').select('id,game_id,full_name,email,phone,created_at,role').order('created_at', { ascending: false })),
     fetchAllRows(() => supabase.from('bookings').select('id,user_id,console_id,starts_at,ends_at,status,total_price,gamer_note,profile:profiles!bookings_user_id_fkey(id,game_id,full_name,email),console:consoles(name)').order('starts_at', { ascending: false })),
     fetchAllRows(() => supabase.from('consoles').select('id,name,platform,hourly_rate,active').order('name')),
     fetchAllRows(() => supabase.from('availability_slots').select('id,console_id,starts_at,ends_at,available,console:consoles(name)').order('starts_at')),
+    supabase.rpc('get_admin_wallet_overview'),
+    supabase.from('wallet_settings').select('hourly_rate').eq('singleton', true).single(),
   ]);
-  return { profiles, bookings, consoles, slots };
+  if (walletResult.error) throw walletResult.error;
+  if (rateResult.error) throw rateResult.error;
+  return { profiles, bookings, consoles, slots, wallets: walletResult.data, walletRate: rateResult.data.hourly_rate };
 };
 
 let adminRecords;
@@ -200,6 +398,7 @@ const renderAdminGamers = () => {
   const body = document.getElementById('adminGamers');
   body.replaceChildren();
   for (const profile of list) {
+    const wallet = adminRecords.wallets.find((item) => item.user_id === profile.id);
     const count = adminRecords.bookings.filter((booking) => booking.user_id === profile.id).length;
     const row = document.createElement('tr');
     row.append(makeCell(profile.game_id));
@@ -219,6 +418,18 @@ const renderAdminGamers = () => {
     phoneInput.setAttribute('aria-label', `Phone for ${profile.game_id}`);
     phoneCell.append(phoneInput);
     row.append(phoneCell, makeCell(new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(profile.created_at))), makeCell(count));
+    row.append(makeCell(wallet ? formatPlaytime(wallet.available_minutes) : '0 hr 0 min'));
+    const creditCell = document.createElement('td');
+    const creditInput = document.createElement('input');
+    creditInput.className = 'table-cell-input';
+    creditInput.type = 'number';
+    creditInput.min = '0.01';
+    creditInput.step = '0.01';
+    creditInput.max = '1000000';
+    creditInput.placeholder = '₹ amount';
+    creditInput.setAttribute('aria-label', `Credit amount for ${profile.game_id}`);
+    creditCell.append(creditInput);
+    row.append(creditCell);
     const actions = document.createElement('td');
     const save = document.createElement('button');
     save.type = 'button';
@@ -232,7 +443,33 @@ const renderAdminGamers = () => {
       showMessage(feedback, error ? error.message : 'Gamer record updated.', Boolean(error));
       if (!error) await refreshAdmin();
     });
-    actions.append(save);
+    const addCredit = document.createElement('button');
+    addCredit.type = 'button';
+    addCredit.className = 'table-action';
+    addCredit.textContent = 'Add credit';
+    addCredit.addEventListener('click', async () => {
+      const amount = Number(creditInput.value);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showMessage(feedback, 'Enter a credit amount greater than zero.', true);
+        creditInput.focus();
+        return;
+      }
+      addCredit.disabled = true;
+      const { error } = await supabase.rpc('admin_add_wallet_credit', {
+        p_user_id: profile.id,
+        p_amount: amount,
+        p_note: 'Admin playtime credit',
+      });
+      addCredit.disabled = false;
+      if (error) {
+        showMessage(feedback, error.message, true);
+        return;
+      }
+      creditInput.value = '';
+      showMessage(feedback, `Wallet credit added for ${profile.game_id}.`);
+      await refreshAdmin();
+    });
+    actions.append(addCredit, save);
     row.append(actions);
     body.append(row);
   }
@@ -391,21 +628,41 @@ document.getElementById('bookingSearch').addEventListener('input', renderAdminBo
 document.getElementById('bookingStatusFilter').addEventListener('change', renderAdminBookings);
 document.getElementById('bookingDateFilter').addEventListener('change', renderAdminBookings);
 document.getElementById('gamerSearch').addEventListener('input', renderAdminGamers);
+document.getElementById('walletRateForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submit = form.querySelector('[type="submit"]');
+  const walletFeedback = document.getElementById('walletAdminFeedback');
+  submit.disabled = true;
+  const { error } = await supabase.rpc('admin_set_wallet_hourly_rate', {
+    p_hourly_rate: Number(form.elements.hourly_rate.value),
+  });
+  submit.disabled = false;
+  showMessage(walletFeedback, error
+    ? error.message
+    : 'Wallet conversion rate updated. Gamer cards now show the updated time equivalent.', Boolean(error));
+  if (!error) await refreshAdmin();
+});
 
 const boot = async () => {
   showMessage(feedback, 'Loading your account…');
   if (configurationError) return showMessage(feedback, configurationError, true);
   const { user, error } = await getCurrentUser();
   if (error || !user) return window.location.replace('account.html');
-  const profileResult = await supabase.from('profiles').select('id,game_id,full_name,phone,role,created_at').eq('id', user.id).single();
+  const profileResult = await supabase.from('profiles').select('id,game_id,full_name,phone,game_tags,role,created_at').eq('id', user.id).single();
   if (profileResult.error) return showMessage(feedback, profileResult.error.message, true);
   if (profileResult.data.role === 'admin') {
     adminView.hidden = false;
     document.getElementById('dashboardTitle').textContent = 'Admin operations';
     document.getElementById('dashboardIntro').textContent = 'Bookings, members, availability, and performance from your live records.';
     await refreshAdmin();
+    if (adminRecords) {
+      document.querySelector('#walletRateForm [name="hourly_rate"]').value = Number(adminRecords.walletRate).toFixed(2);
+    }
+    await initializeTournamentAdmin(supabase);
+    await initializeGameAdmin(supabase);
     const updates = supabase.channel('admin-dashboard');
-    ['bookings', 'profiles', 'consoles', 'availability_slots'].forEach((table) => {
+    ['bookings', 'profiles', 'consoles', 'availability_slots', 'wallet_transactions'].forEach((table) => {
       updates.on('postgres_changes', { event: '*', schema: 'public', table }, refreshAdmin);
     });
     updates.subscribe();

@@ -19,11 +19,14 @@ Game Nation is a Vite multi-page site using Supabase Auth, PostgreSQL, RLS, and 
 
 ## Security and behavior
 
-- The browser uses only the project URL and publishable key. Every exposed table has RLS. Gamer profiles and bookings are private to their owner; admin queries require the database profile role.
+- The browser uses only the project URL and publishable key. Every exposed table has RLS. Gamer profiles and bookings are private to their owner; the authenticated leaderboard RPC returns only gamer names, Game IDs, game tags, and aggregate play counts/duration. Admin queries require the database profile role.
 - Auth-user triggers create permanent unique Game IDs and gamer profiles. The configured admin email is promoted only by a trusted database trigger after email confirmation.
 - Booking inserts derive the user, status, and total from the authenticated session, selected availability row, and console rate. Admin status changes use a database RPC. A PostgreSQL GiST exclusion constraint prevents overlapping approved/completed sessions for one console, including concurrent approvals.
 - Pending and rejected/cancelled requests do not reserve a slot. Completed booking totals drive spending and revenue metrics. Admin reports are queried from the database and support a date range; booking and gamer lists include search/status/date filters.
 - The dashboard and status page refresh booking state through Supabase Realtime. Public visitors can read active console names and open times, but cannot read bookings or profiles.
+- Tournament workflows use migration `202610110005_tournament_system.sql`. Public pages can read tournament schedules, registered names, brackets, match scores, and aggregate standings; all writes go through server-side RPCs. Registration is unique per account/event, bracket slots accept registered players only, and only admins can change tournament state, scores, or results.
+- Confirmed tournament wins create versioned points transactions (10 points by default). Reconfirming an unchanged result is idempotent; an admin correction records a reversal and replacement award. Automatic byes advance without points. Result versions and point transactions are available to admins in the tournament dashboard audit panel.
+- Migration `202610110006_wallet_games.sql` adds admin-managed INR credit and a configurable credit-per-hour conversion. Gamer cards display the wallet as remaining hours and minutes; approval debits the booking price, cancellation of an approved booking refunds the debit, and insufficient credit prevents approval. The More Games page also loads admin-added games from the database while retaining its existing catalog.
 - Edit the seeded hourly rates from the admin console list. Prices are calculated by the database from those rates and booking duration; values in browser requests are not trusted.
 
 ## Build and deployment
@@ -37,11 +40,17 @@ For Vercel, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in **Pro
 After applying migrations and configuring the publishable key:
 
 1. Register a new email, confirm it, sign in, and verify its profile has role `gamer`, a stable `GN-...` Game ID, and only its own booking history.
-2. Sign in as the confirmed admin email and verify the admin dashboard is shown. From a gamer session, try updating the profile `role` through the Supabase API; the column grant and database trigger must reject the change. A gamer must not be able to read another profile or booking.
+2. Sign in as the confirmed admin email and verify the admin dashboard is shown. From a gamer session, try updating the profile `role` through the Supabase API; the column grant and database trigger must reject the change. A gamer must not be able to read another profile or booking directly; the leaderboard should expose only its documented aggregate player fields.
 3. As admin, create an availability slot. As a gamer, request it and verify its status is `pending`, the displayed price matches the server-side rate, and it is not counted as a confirmed booking.
 4. Approve the request as admin, then attempt to approve another overlapping request for the same console. The second approval must fail at the database exclusion constraint. Rejecting/cancelling a pending request should leave the slot requestable again.
 5. Complete a booking and verify completed-session, spending, revenue, and utilization figures change from database records. Verify Realtime updates another open dashboard/status page.
 6. Use password reset and confirm the recovery link opens the new-password form before it routes to the dashboard.
+7. On the gamer card, update the name, phone, and up to five game tags. Confirm the card shows the selected tags and that the rankings filters reorder players by completed sessions, bookings, and completed playtime while marking the signed-in player's rank.
+8. As admin, create a tournament, open registration, and confirm a gamer can register only once, withdraw before the deadline, and cannot exceed the player limit. Close registration and generate a random or manual bracket; verify odd-sized entries receive byes with no points, and that a manual bracket cannot start until every registered player is assigned exactly once.
+9. Start the tournament, record and confirm a result, and verify the winner advances and receives points once. Reconfirm the same score and verify points do not change; correct the winner before its next match is confirmed and verify the audit records a reversal and replacement award.
+10. Verify tournament management and score RPCs reject a gamer account, while public tournament pages and Realtime updates show registration counts, current matches, confirmed results, and rankings.
+11. As admin, change the wallet's credit-per-hour rate and add credit to one gamer. Verify only that gamer sees the equivalent hours/minutes on their gamer card. Approve a booking within their credit, confirm the wallet debit, then cancel and confirm the refund; an over-balance approval must fail.
+12. As admin, add a game to Solo, Duo, or Squad and confirm it appears in the matching More Games tab. Hide it from the admin library and confirm it disappears publicly, then restore it.
 
 These are live-project checks and require applying migrations, a real publishable key, and test accounts. They cannot be run from this workspace before those manual steps.
 
