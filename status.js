@@ -1,10 +1,16 @@
-import { configurationError, formatMoney, getCurrentUser, showMessage, supabase } from './supabase.js';
+import { configurationError, getCurrentUser, showMessage, supabase } from './supabase.js';
 
 const bookingDateInput = document.getElementById('bookingDate');
 const consoleSelect = document.getElementById('consoleSelect');
 const selectedDateLabel = document.getElementById('selectedDateLabel');
 const slotGroups = document.getElementById('slotGroups');
 const bookingFeedback = document.getElementById('bookingFeedback');
+const bookingConfirmDialog = document.getElementById('bookingConfirmDialog');
+const bookingConfirmTitle = document.getElementById('bookingConfirmTitle');
+const bookingConfirmDetails = document.getElementById('bookingConfirmDetails');
+const bookingConfirmYes = document.getElementById('bookingConfirmYes');
+const bookingConfirmNo = document.getElementById('bookingConfirmNo');
+let pendingConfirmation;
 
 const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
@@ -31,13 +37,13 @@ const formatTime = (dateString) => new Intl.DateTimeFormat(undefined, { hour: 'n
 
 const loadConsoles = async () => {
   const { data, error } = await supabase.from('consoles')
-    .select('id,name,platform,hourly_rate').eq('active', true).order('name');
+    .select('id,name,platform').eq('active', true).order('name');
   if (error) throw error;
   consoleSelect.replaceChildren();
   for (const consoleItem of data) {
     const option = document.createElement('option');
     option.value = consoleItem.id;
-    option.textContent = `${consoleItem.name} · ${formatMoney(consoleItem.hourly_rate)}/hr`;
+    option.textContent = consoleItem.name;
     consoleSelect.append(option);
   }
   consoleSelect.disabled = !data.length;
@@ -58,11 +64,11 @@ const renderSlot = (slot, booking, user) => {
   button.type = 'button';
   button.className = `slot-button${confirmed ? ' is-booked' : ''}${pending ? ' is-pending' : ''}`;
   button.disabled = !user || confirmed || (!booking && !slot.available);
-  button.setAttribute('aria-label', `${formatTime(slot.starts_at)} to ${formatTime(slot.ends_at)}, ${confirmed ? 'confirmed' : pending ? 'request pending' : 'available'}`);
+  button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${confirmed ? 'confirmed' : pending ? 'request pending' : 'available'}`);
 
   const time = document.createElement('span');
   time.className = 'slot-time';
-  time.textContent = `${formatTime(slot.starts_at)} – ${formatTime(slot.ends_at)}`;
+  time.textContent = formatTime(slot.starts_at);
   const state = document.createElement('span');
   state.className = 'slot-state';
   state.textContent = confirmed ? 'Confirmed' : pending ? 'Pending review' : slot.available ? 'Request slot' : 'Unavailable';
@@ -70,12 +76,36 @@ const renderSlot = (slot, booking, user) => {
 
   if (pending && booking.user_id === user?.id) {
     button.disabled = false;
-    button.addEventListener('click', () => updateBooking(booking.id));
+    button.addEventListener('click', () => confirmSelection(slot, 'cancel', booking));
   } else if (!booking && slot.available && user) {
-    button.addEventListener('click', () => requestBooking(slot));
+    button.addEventListener('click', () => confirmSelection(slot, 'book'));
   }
   return button;
 };
+
+const confirmSelection = (slot, action, booking = null) => {
+  pendingConfirmation = { slot, action, booking };
+  bookingConfirmTitle.textContent = action === 'book'
+    ? 'Do you want to book this session?'
+    : 'Do you want to cancel this request?';
+  bookingConfirmDetails.textContent = `${consoleSelect.selectedOptions[0]?.textContent || 'Selected console'} · ${formatDateLabel(bookingDateInput.value)} · ${formatTime(slot.starts_at)} to ${formatTime(slot.ends_at)}`;
+  bookingConfirmYes.textContent = action === 'book' ? 'Yes, book it' : 'Yes, cancel it';
+  bookingConfirmDialog.showModal();
+};
+
+bookingConfirmNo.addEventListener('click', () => bookingConfirmDialog.close());
+bookingConfirmDialog.addEventListener('close', () => {
+  pendingConfirmation = null;
+  bookingConfirmYes.disabled = false;
+});
+bookingConfirmYes.addEventListener('click', async () => {
+  if (!pendingConfirmation) return;
+  const { slot, action, booking } = pendingConfirmation;
+  bookingConfirmYes.disabled = true;
+  bookingConfirmDialog.close();
+  if (action === 'book') await requestBooking(slot);
+  else await updateBooking(booking.id);
+});
 
 const renderSlots = async () => {
   if (!supabase || !consoleSelect.value || !bookingDateInput.value) return;
@@ -120,17 +150,17 @@ const renderSlots = async () => {
     empty.textContent = 'No sessions have been scheduled for this console and date yet.';
     slotGroups.append(empty);
   } else {
+    const section = document.createElement('section');
+    section.className = 'slot-group';
+    const heading = document.createElement('h2');
+    heading.textContent = 'Available start times';
+    const grid = document.createElement('div');
+    grid.className = 'slot-grid';
     for (const slot of slotsResult.data) {
-      const section = document.createElement('section');
-      section.className = 'slot-group';
-      const heading = document.createElement('h2');
-      heading.textContent = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(new Date(slot.starts_at));
-      const grid = document.createElement('div');
-      grid.className = 'slot-grid';
       grid.append(renderSlot(slot, bookingsByStart.get(slot.starts_at), user));
-      section.append(heading, grid);
-      slotGroups.append(section);
     }
+    section.append(heading, grid);
+    slotGroups.append(section);
   }
 
   if (!user) {

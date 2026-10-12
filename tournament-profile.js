@@ -3,7 +3,8 @@ import { showMessage } from './supabase.js';
 let historyChannel;
 
 export const loadTournamentProfile = async (supabase, userId) => {
-  const feedback = document.getElementById('dashboardFeedback');
+  const feedback = document.getElementById('tournamentProfileFeedback')
+    || document.getElementById('dashboardFeedback');
   const body = document.getElementById('gamerTournamentHistory');
   const empty = document.getElementById('gamerTournamentHistoryEmpty');
   const metrics = document.getElementById('gamerTournamentMetrics');
@@ -12,6 +13,7 @@ export const loadTournamentProfile = async (supabase, userId) => {
     showMessage(feedback, error.message, true);
     return;
   }
+  showMessage(feedback, '');
 
   const summary = {
     points: data.reduce((sum, row) => sum + Number(row.points), 0),
@@ -63,5 +65,9 @@ export const loadTournamentProfile = async (supabase, userId) => {
   if (historyChannel) await supabase.removeChannel(historyChannel);
   historyChannel = supabase.channel(`gamer-tournament-history-${userId}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, () => loadTournamentProfile(supabase, userId))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_registrations' }, () => loadTournamentProfile(supabase, userId))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_matches' }, () => loadTournamentProfile(supabase, userId))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_match_results' }, () => loadTournamentProfile(supabase, userId))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_points_transactions' }, () => loadTournamentProfile(supabase, userId))
     .subscribe();
 };

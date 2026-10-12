@@ -1,4 +1,5 @@
 import { showMessage } from './supabase.js';
+import { youtubeVideoId } from './youtube.js';
 
 const form = document.getElementById('addGameForm');
 const feedback = document.getElementById('gameAdminFeedback');
@@ -21,7 +22,7 @@ const renderAdminGames = (games) => {
     const title = document.createElement('strong');
     title.textContent = game.title;
     const details = document.createElement('span');
-    details.textContent = `${game.mode} · ${Number(game.rating).toFixed(1)} / 5${game.active ? '' : ' · Hidden'}`;
+    details.textContent = `${game.mode} · ${Number(game.rating).toFixed(1)} / 5${game.youtube_url ? ' · Trailer added' : ' · No trailer'}${game.active ? '' : ' · Hidden'}`;
     info.append(title, details);
     const toggle = document.createElement('button');
     toggle.type = 'button';
@@ -45,7 +46,7 @@ const renderAdminGames = (games) => {
 
 const loadGames = async () => {
   const { data, error } = await client.from('games')
-    .select('id,title,mode,image_url,rating,active')
+    .select('id,title,mode,image_url,rating,youtube_url,active')
     .order('created_at', { ascending: false });
   if (error) {
     showMessage(feedback, error.message, true);
@@ -59,12 +60,20 @@ export const initializeGameAdmin = async (supabaseClient) => {
   await loadGames();
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const youtubeUrl = form.elements.youtube_url.value.trim();
+    if (youtubeUrl && !youtubeVideoId(youtubeUrl)) {
+      showMessage(feedback, 'Enter a valid YouTube watch, short, or embed link.', true);
+      form.elements.youtube_url.focus();
+      return;
+    }
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true;
     const { error } = await client.from('games').insert({
       title: form.elements.title.value.trim(),
       mode: form.elements.mode.value,
       image_url: form.elements.image_url.value.trim(),
+      description: form.elements.description.value.trim(),
+      youtube_url: youtubeUrl,
       rating: Number(form.elements.rating.value),
     });
     submit.disabled = false;

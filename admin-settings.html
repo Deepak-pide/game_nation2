@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Configure Game Nation wallet and playtime settings." />
+    <title>Game Nation | Admin Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-admin-page="admin-settings.html">
+    <header class="site-header"><a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a><button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button><nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="tournaments.html">Tournaments</a><a href="status.html">Bookings</a></nav><div class="header-actions" id="actionNavigation"><a class="explore-link" href="admin.html">Admin hub</a></div></header>
+    <main class="admin-page"><div class="admin-shell">
+      <section class="dashboard-heading"><div><p class="eyebrow"><span></span> Configuration</p><h1>Data settings</h1><p class="status-heading-copy">Set how wallet credit converts to gamer playtime.</p></div></section>
+      <nav class="admin-page-nav" id="adminPageNav" aria-label="Admin pages"></nav><p class="dashboard-feedback" id="adminFeedback" role="status" aria-live="polite">Checking administrator access…</p>
+      <section class="dashboard-section admin-operation-card admin-accent-amber">
+        <div class="section-heading"><div><p class="eyebrow"><span></span> Wallet</p><h2>Money-to-time conversion</h2></div></div>
+        <p class="admin-settings-copy">Gamer wallet credit is converted into available playtime using this rate. Live sessions deduct only complete minutes and record each charge in wallet history.</p>
+        <form id="walletRateForm" class="inline-form"><label class="form-field">Wallet credit for one hour (₹)<input name="hourly_rate" type="number" min="0.60" max="100000" step="0.01" required /></label><button class="nav-pill" type="submit">Save conversion rate</button></form>
+        <p class="dashboard-feedback" id="walletAdminFeedback" role="status" aria-live="polite"></p>
+      </section>
+    </div></main>
+    <script type="module" src="admin-settings.js"></script><script type="module" src="navigation.js"></script>
+  </body>
+</html>

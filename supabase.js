@@ -37,5 +37,6 @@ export const showMessage = (element, message, isError = false) => {
 export const getCurrentUser = async () => {
   if (!supabase) return { user: null, error: configurationError };
   const { data, error } = await supabase.auth.getUser();
+  if (error?.name === 'AuthSessionMissingError') return { user: null, error: null };
   return { user: data.user, error };
 };

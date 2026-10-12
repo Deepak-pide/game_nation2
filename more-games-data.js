@@ -3,8 +3,9 @@ import { configurationError, showMessage, supabase } from './supabase.js';
 const feedback = document.getElementById('gameLibraryFeedback');
 
 const createGameCard = (game) => {
-  const card = document.createElement('article');
+  const card = document.createElement('a');
   card.className = 'game-card database-game-card';
+  card.href = `game-details.html?id=${encodeURIComponent(game.id)}`;
   card.dataset.gameId = game.id;
   if (game.image_url) {
     const image = document.createElement('img');
@@ -44,6 +45,9 @@ const createGameCard = (game) => {
 };
 
 const loadGames = async () => {
+  const panels = [...document.querySelectorAll('.tab-panel[id="solo"], .tab-panel[id="duo"], .tab-panel[id="squad"]')];
+  const grids = new Map(panels.map((panel) => [panel.id, panel.querySelector('.game-grid')]));
+  for (const grid of grids.values()) grid.replaceChildren();
   if (!supabase) {
     showMessage(feedback, configurationError, true);
     return;
@@ -56,14 +60,19 @@ const loadGames = async () => {
     showMessage(feedback, error.message, true);
     return;
   }
-  document.querySelectorAll('.tab-panel[id="solo"], .tab-panel[id="duo"], .tab-panel[id="squad"]').forEach((panel) => {
-    panel.querySelectorAll('.database-game-card').forEach((card) => card.remove());
-  });
   for (const game of data) {
-    const grid = document.querySelector(`#${CSS.escape(game.mode)} .game-grid`);
+    const grid = grids.get(game.mode);
     if (grid) grid.append(createGameCard(game));
   }
-  showMessage(feedback, '');
+  for (const [mode, grid] of grids) {
+    if (!grid.childElementCount) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state game-library-empty';
+      empty.textContent = `No ${mode} games have been added yet.`;
+      grid.append(empty);
+    }
+  }
+  showMessage(feedback, data.length ? '' : 'Games added by an admin will appear here.');
 };
 
 loadGames();

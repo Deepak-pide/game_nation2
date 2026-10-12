@@ -16,12 +16,14 @@
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="homepage">
     <header class="site-header">
       <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home">
         <span class="brand-mark">GN</span>
         <span class="brand-name">GAME <b>NATION</b></span>
       </a>
+
+      <a class="nav-pill mobile-login-link" href="account.html">Login</a>
 
       <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation">
         <span></span><span></span><span></span>
@@ -29,9 +31,9 @@
 
       <nav class="main-nav" id="mainNavigation" aria-label="Main navigation">
         <a href="#top">Games</a>
-        <a href="#pricing">Pricing</a>
-        <a href="more-games.html">Explore</a>
-        <a href="tournaments.html">Tournaments</a>
+        <a class="mobile-guest-link" href="more-games.html">Explore</a>
+        <a class="mobile-guest-link" href="#pricing">Pricing</a>
+        <a class="mobile-guest-link" href="tournaments.html">Tournaments</a>
         <a href="status.html">Status</a>
       </nav>
 
@@ -47,10 +49,8 @@
     <section class="hero-intro" id="top">
       <div class="hero-intro__content">
         <p class="eyebrow hero-eyebrow"><span></span> Sony PlayStation</p>
-        <div class="hero-timing" aria-label="Open on Saturday and Sunday">
-          <span>Saturday</span>
-          <span class="hero-timing__divider">|</span>
-          <span>Sunday</span>
+        <div class="hero-timing">
+          <span>Best place for your weekend</span>
         </div>
         <h1>EXPERIENCE SONY PLAYSTATION</h1>
         <p>
@@ -207,36 +207,17 @@
 
       <div class="pricing-grid">
         <article class="price-card">
-          <span class="plan-name">Solo</span>
-          <h3>₹40</h3>
-          <p>for 30 min</p>
-          <ul>
-            <li>Private seat</li>
-            <li>Best for quick play</li>
-            <li>Flexible setup</li>
-          </ul>
+          <span class="plan-name">Standard session</span>
+          <h3>₹20 <small>per remote</small></h3>
+          <p class="plan-title">Normal Booking</p>
+          <p>Book a regular gaming session and play solo or with friends.</p>
         </article>
-
         <article class="price-card featured">
-          <span class="plan-name">Duo</span>
-          <h3>₹30 <small>each</small></h3>
-          <p>shared gaming session</p>
-          <ul>
-            <li>2-player setup</li>
-            <li>Perfect for friends</li>
-            <li>Co-op friendly</li>
-          </ul>
-        </article>
-
-        <article class="price-card">
-          <span class="plan-name">Squad</span>
-          <h3>₹20 <small>each</small></h3>
-          <p>team play package</p>
-          <ul>
-            <li>Group setup</li>
-            <li>Competitive energy</li>
-            <li>Best team value</li>
-          </ul>
+          <span class="plan-name">Private session</span>
+          <h3>Make it <small>your event</small></h3>
+          <p class="plan-title">Private Booking</p>
+          <p>Plan a private gaming session for birthdays, tournaments, and more.</p>
+          <a class="nav-pill private-booking-cta" href="private-booking.html">Plan your private booking</a>
         </article>
       </div>
     </section>

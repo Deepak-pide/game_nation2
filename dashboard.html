@@ -50,7 +50,7 @@
                 <button class="text-button" id="cancelProfileEdit" type="button">Cancel</button>
               </div>
             </form>
-            <dl class="gamer-stats"><div><dt>Member since</dt><dd id="memberSince">—</dd></div><div><dt>Total bookings</dt><dd id="totalBookings">0</dd></div><div><dt>Completed sessions</dt><dd id="completedSessions">0</dd></div><div class="gamer-playtime-stat"><dt>Available playtime</dt><dd id="availablePlaytime">0 min</dd><small id="playtimeConversion"></small></div></dl>
+            <dl class="gamer-stats"><div><dt>Member since</dt><dd id="memberSince">—</dd></div><div><dt>Total bookings</dt><dd id="totalBookings">0</dd></div><div><dt>Completed sessions</dt><dd id="completedSessions">0</dd></div><div class="gamer-playtime-stat"><dt>Available playtime</dt><dd id="availablePlaytime">0 min</dd></div></dl>
           </article>
           <section class="dashboard-section ranking-section">
             <div class="section-heading">
@@ -69,12 +69,15 @@
             </div>
             <p class="empty-state" id="gamerRankingsEmpty" hidden>No players have booked a session yet.</p>
           </section>
-          <section class="dashboard-section gamer-tournament-record">
-            <div class="section-heading"><div><p class="eyebrow"><span></span> Tournament record</p><h2>Your competitive profile</h2></div><a class="tournament-action-link" href="tournaments.html">Explore tournaments</a></div>
-            <div class="gamer-tournament-metrics" id="gamerTournamentMetrics"></div>
-            <div class="table-wrap"><table class="tournament-leaderboard"><thead><tr><th>Tournament</th><th>Game</th><th>Status</th><th>Matches</th><th>Record</th><th>Points</th></tr></thead><tbody id="gamerTournamentHistory"></tbody></table></div>
-            <p class="empty-state" id="gamerTournamentHistoryEmpty" hidden>No tournament history yet.</p>
-          </section>
+          <a class="dashboard-tournament-promo" href="my-tournaments.html">
+            <span class="dashboard-tournament-promo-glow" aria-hidden="true"></span>
+            <span class="dashboard-tournament-promo-content">
+              <span class="eyebrow"><span></span> Your competitive profile</span>
+              <strong>Enter the arena</strong>
+              <span>Track your tournament points, wins, and match history.</span>
+            </span>
+            <span class="dashboard-tournament-promo-action">My tournaments <span aria-hidden="true">→</span></span>
+          </a>
           <section class="dashboard-section">
             <div class="section-heading"><div><p class="eyebrow"><span></span> Your activity</p><h2>Booking history</h2></div></div>
             <div class="table-wrap"><table><thead><tr><th>Session</th><th>Console</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody id="gamerBookings"></tbody></table></div>

@@ -69,6 +69,18 @@
       </div>
     </main>
 
+    <dialog class="booking-confirm-dialog" id="bookingConfirmDialog" aria-labelledby="bookingConfirmTitle" aria-describedby="bookingConfirmDetails">
+      <div class="booking-confirm-card">
+        <p class="eyebrow"><span></span> Confirm your session</p>
+        <h2 id="bookingConfirmTitle">Do you want to book this session?</h2>
+        <p class="booking-confirm-details" id="bookingConfirmDetails"></p>
+        <div class="booking-confirm-actions">
+          <button class="booking-confirm-no" id="bookingConfirmNo" type="button">No, go back</button>
+          <button class="nav-pill booking-confirm-yes" id="bookingConfirmYes" type="button">Yes, book it</button>
+        </div>
+      </div>
+    </dialog>
+
     <script type="module" src="script.js"></script>
     <script type="module" src="status.js"></script>
     <script type="module" src="navigation.js"></script>

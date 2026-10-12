@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Game details, description, and trailer." />
+    <title>Game details | Game Nation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="game-details-page">
+    <header class="site-header">
+      <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="more-games.html">More Games</a><a href="tournaments.html">Tournaments</a></nav>
+      <div class="header-actions" id="actionNavigation"></div>
+    </header>
+    <main class="game-details-main">
+      <p id="gameDetailsFeedback" class="game-details-feedback" role="status" aria-live="polite">Loading game…</p>
+      <section id="gameHero" class="game-detail-hero" hidden aria-labelledby="gameTitle">
+        <img id="gameImage" class="game-detail-image" alt="" />
+        <div class="game-detail-shade"></div>
+        <div class="game-detail-hero-content">
+          <a class="game-detail-back" href="more-games.html">← More Games</a>
+          <p id="gameMode" class="eyebrow"></p>
+          <h1 id="gameTitle"></h1>
+          <p id="gameDescriptionPreview"></p>
+        </div>
+      </section>
+      <section id="gameContent" class="game-detail-content" hidden>
+        <div class="game-detail-description">
+          <p class="eyebrow"><span></span> About the game</p>
+          <h2 id="gameAboutTitle"></h2>
+          <p id="gameDescription"></p>
+        </div>
+        <section class="game-trailer-section" aria-labelledby="trailerTitle">
+          <div><p class="eyebrow"><span></span> Watch trailer</p><h2 id="trailerTitle">See it in action</h2></div>
+          <button id="playTrailer" class="game-trailer-play" type="button" hidden aria-label="Play game trailer with sound">
+            <span aria-hidden="true">▶</span><span>Play trailer with sound</span>
+          </button>
+          <p id="noTrailer" class="game-trailer-empty" hidden>No trailer has been added for this game yet.</p>
+          <div id="gameTrailerPlayer" class="game-trailer-player" hidden></div>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="game-details.js"></script>
+    <script type="module" src="navigation.js"></script>
+  </body>
+</html>

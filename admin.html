@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Game Nation administrator control center." />
+    <title>Game Nation | Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-admin-page="admin.html">
+    <header class="site-header">
+      <a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="mainNavigation" aria-label="Admin navigation"></nav>
+      <div class="header-actions" id="actionNavigation"><a class="explore-link" href="admin.html">Admin hub</a></div>
+    </header>
+    <main class="admin-page">
+      <div class="admin-shell">
+        <section class="dashboard-heading"><div><p class="eyebrow"><span></span> Control center</p><h1>Admin overview</h1><p class="status-heading-copy">Review performance and respond to player booking requests from one place.</p></div></section>
+        <nav class="admin-page-nav" id="adminPageNav" aria-label="Admin pages"></nav>
+        <p class="dashboard-feedback" id="adminFeedback" role="status" aria-live="polite">Checking administrator access…</p>
+        <section class="admin-overview-section" aria-labelledby="adminAnalyticsTitle">
+          <div class="section-heading"><div><p class="eyebrow"><span></span> At a glance</p><h2 id="adminAnalyticsTitle">Business analytics</h2></div><button class="table-action" id="refreshAdminOverview" type="button">Refresh</button></div>
+          <div class="admin-overview-metrics" id="adminOverviewMetrics" aria-live="polite"></div>
+        </section>
+        <section class="dashboard-section admin-operation-card admin-accent-amber admin-request-section" id="bookingRequests">
+          <div class="section-heading"><div><p class="eyebrow"><span></span> Needs your attention</p><h2>Player booking requests</h2><p class="admin-settings-copy">Approve or reject pending player requests here.</p></div><a class="table-action" href="admin-slots.html">Manage slots</a></div>
+          <div class="table-wrap"><table><thead><tr><th>Player</th><th>Console</th><th>Requested time</th><th>Price</th><th>Action</th></tr></thead><tbody id="adminPendingBookings"></tbody></table></div>
+          <p class="empty-state" id="adminPendingBookingsEmpty" hidden>No pending player requests.</p>
+          <p class="dashboard-feedback" id="adminBookingFeedback" role="status" aria-live="polite"></p>
+        </section>
+        <section class="admin-hub-grid">
+          <a class="admin-hub-card admin-accent-purple" href="admin-tournaments.html"><span class="admin-hub-icon">01</span><span class="eyebrow">Competitive events</span><strong>Tournaments</strong><span>Create events, prepare brackets, confirm results, and manage points.</span><b>Open tournament desk →</b></a>
+          <a class="admin-hub-card admin-accent-green" href="admin-gamers.html"><span class="admin-hub-icon">02</span><span class="eyebrow">Members</span><strong>Gamers &amp; credit</strong><span>Find player accounts, review available time, and add wallet credit.</span><b>Open gamer desk →</b></a>
+          <a class="admin-hub-card admin-accent-violet" href="admin-slots.html"><span class="admin-hub-icon">03</span><span class="eyebrow">Equipment &amp; schedule</span><strong>Slots &amp; consoles</strong><span>Add consoles, organize availability, and manage every scheduled slot.</span><b>Open scheduling →</b></a>
+          <a class="admin-hub-card admin-accent-cyan" href="admin-live.html"><span class="admin-hub-icon">04</span><span class="eyebrow">Operations</span><strong>Live sessions</strong><span>View all slots and bookings; start, pause, resume, or stop session timers.</span><b>Open live control →</b></a>
+          <a class="admin-hub-card admin-accent-blue" href="admin-games.html"><span class="admin-hub-icon">05</span><span class="eyebrow">Game library</span><strong>Manage more games</strong><span>Add games to player categories and show or hide library entries.</span><b>Open game library →</b></a>
+          <a class="admin-hub-card admin-accent-amber" href="admin-settings.html"><span class="admin-hub-icon">06</span><span class="eyebrow">Configuration</span><strong>Data settings</strong><span>Manage the credit-to-playtime conversion used across gamer wallets.</span><b>Open settings →</b></a>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="admin-home.js"></script>
+    <script type="module" src="navigation.js"></script>
+  </body>
+</html>

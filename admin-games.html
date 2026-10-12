@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Manage the Game Nation game library." />
+    <title>Game Nation | Game Library Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-admin-page="admin-games.html">
+    <header class="site-header"><a class="brand" href="index.html?skipIntro=1#top" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a><button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button><nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="index.html?skipIntro=1#top">Games</a><a href="index.html#pricing">Pricing</a><a href="more-games.html">Explore</a><a href="tournaments.html">Tournaments</a><a href="status.html">Bookings</a></nav><div class="header-actions" id="actionNavigation"><a class="explore-link" href="admin.html">Admin hub</a></div></header>
+    <main class="admin-page"><div class="admin-shell">
+      <section class="dashboard-heading"><div><p class="eyebrow"><span></span> Game library</p><h1>Manage more games</h1><p class="status-heading-copy">Add games to Solo, Duo, or Squad and control public visibility.</p></div></section>
+      <nav class="admin-page-nav" id="adminPageNav" aria-label="Admin pages"></nav><p class="dashboard-feedback" id="adminFeedback" role="status" aria-live="polite">Checking administrator access…</p>
+      <section class="dashboard-section admin-operation-card admin-accent-cyan">
+        <form id="addGameForm" class="tournament-admin-form">
+          <label class="form-field">Game title<input name="title" maxlength="100" required /></label>
+          <label class="form-field">Player mode<select name="mode" required><option value="solo">Solo · 1 player</option><option value="duo">Duo · 2 players</option><option value="squad">Squad · 3–4 players</option></select></label>
+          <label class="form-field tournament-form-wide">Cover image URL<input name="image_url" type="url" maxlength="1000" placeholder="https://…" /></label>
+          <label class="form-field tournament-form-wide">Game description<textarea name="description" maxlength="2000" rows="4" placeholder="What makes this game worth playing?"></textarea></label>
+          <label class="form-field tournament-form-wide">YouTube trailer URL<input name="youtube_url" type="url" maxlength="500" placeholder="https://www.youtube.com/watch?v=…" /></label>
+          <label class="form-field">Rating (1–5)<input name="rating" type="number" min="1" max="5" step="0.1" value="4.5" required /></label>
+          <div class="tournament-form-actions"><button class="nav-pill" type="submit">Add game to library</button></div>
+        </form>
+        <p class="dashboard-feedback" id="gameAdminFeedback" role="status" aria-live="polite"></p>
+        <div id="adminGameList" class="admin-game-list"></div>
+      </section>
+    </div></main>
+    <script type="module" src="admin-games.js"></script><script type="module" src="navigation.js"></script>
+  </body>
+</html>

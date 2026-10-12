@@ -62,7 +62,6 @@ authForm.addEventListener('submit', async (event) => {
         password,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: new URL('account.html', window.location.href).toString(),
         },
       })
       : await supabase.auth.signInWithPassword({ email, password });
@@ -73,7 +72,23 @@ authForm.addEventListener('submit', async (event) => {
     }
 
     if (registering && !result.data.session) {
-      showMessage(accountFeedback, 'Supabase did not start a session. To skip email confirmation, disable “Confirm email” in Supabase Authentication settings, then try again.', true);
+      if (result.data.user.identities?.length === 0) {
+        showMessage(accountFeedback, 'An account may already exist with this email. Try signing in or use Forgot password? to recover it.', true);
+        return;
+      }
+      if (result.data.user.email_confirmed_at) {
+        const signInResult = await supabase.auth.signInWithPassword({ email, password });
+        if (signInResult.error) {
+          throw new Error(`Account created, but automatic sign-in failed: ${signInResult.error.message}. Sign in using your new account.`);
+        }
+        showMessage(accountFeedback, 'Account created. Opening your dashboard…');
+        window.location.assign('dashboard.html');
+        return;
+      }
+      showMessage(
+        accountFeedback,
+        'Account created. Check your email for a confirmation link, then return here to sign in.',
+      );
       return;
     }
 

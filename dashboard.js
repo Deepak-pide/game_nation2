@@ -1,6 +1,5 @@
 import { configurationError, formatMoney, getCurrentUser, showMessage, supabase } from './supabase.js';
 import { initializeTournamentAdmin } from './tournament-admin.js';
-import { loadTournamentProfile } from './tournament-profile.js';
 import { initializeGameAdmin } from './game-admin.js';
 
 const feedback = document.getElementById('dashboardFeedback');
@@ -146,13 +145,6 @@ const renderLeaderboard = async () => {
   }
 };
 
-document.getElementById('signOutButton').addEventListener('click', async () => {
-  if (!supabase) return window.location.assign('account.html');
-  const { error } = await supabase.auth.signOut();
-  if (error) showMessage(feedback, error.message, true);
-  else window.location.assign('account.html');
-});
-
 const showGamerDashboard = async (profile, user) => {
   gamerView.hidden = false;
   document.getElementById('dashboardTitle').textContent = `Welcome, ${profile.full_name || 'gamer'}`;
@@ -236,7 +228,6 @@ const showGamerDashboard = async (profile, user) => {
   };
   document.getElementById('rankingSort').onchange = renderLeaderboard;
   await renderLeaderboard();
-  await loadTournamentProfile(supabase, user.id);
 
   const rows = document.getElementById('gamerBookings');
   rows.replaceChildren();
@@ -274,7 +265,6 @@ const refreshGamerWallet = async (userId) => {
     return;
   }
   document.getElementById('availablePlaytime').textContent = formatPlaytime(wallet.available_minutes);
-  document.getElementById('playtimeConversion').textContent = `At ₹${Number(wallet.hourly_rate).toFixed(2)} per hour`;
   if (userId && !gamerWalletChannel) {
     gamerWalletChannel = supabase.channel(`gamer-wallet-${userId}`)
       .on('postgres_changes', {
@@ -652,20 +642,7 @@ const boot = async () => {
   const profileResult = await supabase.from('profiles').select('id,game_id,full_name,phone,game_tags,role,created_at').eq('id', user.id).single();
   if (profileResult.error) return showMessage(feedback, profileResult.error.message, true);
   if (profileResult.data.role === 'admin') {
-    adminView.hidden = false;
-    document.getElementById('dashboardTitle').textContent = 'Admin operations';
-    document.getElementById('dashboardIntro').textContent = 'Bookings, members, availability, and performance from your live records.';
-    await refreshAdmin();
-    if (adminRecords) {
-      document.querySelector('#walletRateForm [name="hourly_rate"]').value = Number(adminRecords.walletRate).toFixed(2);
-    }
-    await initializeTournamentAdmin(supabase);
-    await initializeGameAdmin(supabase);
-    const updates = supabase.channel('admin-dashboard');
-    ['bookings', 'profiles', 'consoles', 'availability_slots', 'wallet_transactions'].forEach((table) => {
-      updates.on('postgres_changes', { event: '*', schema: 'public', table }, refreshAdmin);
-    });
-    updates.subscribe();
+    window.location.replace('admin.html');
   } else {
     await showGamerDashboard(profileResult.data, user);
   }
