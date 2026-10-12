@@ -15,6 +15,20 @@
     <main class="admin-page"><div class="admin-shell">
       <section class="dashboard-heading"><div><p class="eyebrow"><span></span> Equipment &amp; scheduling</p><h1>Slots &amp; consoles</h1><p class="status-heading-copy">Add consoles and schedule the times gamers can request.</p></div></section>
       <nav class="admin-page-nav" id="adminPageNav" aria-label="Admin pages"></nav><p class="dashboard-feedback" id="adminFeedback" role="status" aria-live="polite">Checking administrator access…</p>
+      <section class="dashboard-section admin-operation-card admin-accent-amber">
+        <div class="section-heading"><div><p class="eyebrow"><span></span> Admin-only instant reservation</p><h2>Quick Book</h2></div></div>
+        <p class="admin-settings-copy">Reserve a slot immediately for a walk-in or phone booking. Gamer bookings remain requests and require admin approval.</p>
+        <form id="quickBookingForm" class="inline-form">
+          <label class="form-field">Console<select name="console_id" id="quickBookingConsole" required></select></label>
+          <label class="form-field">Date<input name="date" id="quickBookingDate" type="date" required /></label>
+          <label class="form-field">Available slot<select name="slot_id" id="quickBookingSlot" required><option value="">Choose a date and console first</option></select></label>
+          <label class="form-field">Booking name<input name="name" maxlength="80" required placeholder="Customer name" /></label>
+          <label class="form-field">Players<select name="players" id="quickBookingPlayers"><option value="1">1 player</option><option value="2">2 players</option><option value="3">3 players</option></select></label>
+          <p class="quick-book-price" id="adminQuickBookingPrice" aria-live="polite">Price: ₹20 per player · Total: ₹20</p>
+          <button class="nav-pill" id="quickBookingSubmit" type="submit" disabled>Reserve instantly</button>
+        </form>
+        <p class="dashboard-feedback" id="quickBookingFeedback" role="status" aria-live="polite"></p>
+      </section>
       <section class="dashboard-section admin-operation-card admin-accent-orange">
         <div class="section-heading"><div><p class="eyebrow"><span></span> Equipment</p><h2>Add a console</h2></div></div>
         <form id="consoleForm" class="inline-form"><label class="form-field">Console name<input name="name" maxlength="80" required placeholder="PlayStation 5 - 03" /></label><label class="form-field">Platform<input name="platform" maxlength="80" required value="PlayStation 5" /></label><label class="form-field">Hourly rate (₹)<input name="hourly_rate" type="number" min="0" step="0.01" required /></label><button class="nav-pill" type="submit">Add console</button></form>

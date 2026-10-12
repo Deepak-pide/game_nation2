@@ -28,6 +28,15 @@ const formatElapsed = (seconds) => {
   const remainder = total % 60;
   return [hours, minutes, remainder].map((part) => String(part).padStart(2, '0')).join(':');
 };
+const quickBookingDurationSeconds = 40 * 60;
+const formatCountdown = (seconds) => {
+  const total = Math.ceil(seconds);
+  const sign = total < 0 ? '-' : '';
+  const absolute = Math.abs(total);
+  const minutes = Math.floor(absolute / 60);
+  const remainder = absolute % 60;
+  return `${sign}${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+};
 const makeNode = (tag, className, text) => {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -49,7 +58,17 @@ const updateClocks = () => {
   });
   slotsContainer.querySelectorAll('[data-quick-clock]').forEach((clock) => {
     const card = clock.closest('[data-quick-session]');
-    if (card?.quickSessionData) clock.textContent = formatElapsed(sessionSeconds(card.quickSessionData));
+    const session = card?.quickSessionData;
+    if (!card) return;
+    const remainingSeconds = quickBookingDurationSeconds - (session ? sessionSeconds(session) : 0);
+    clock.textContent = formatCountdown(remainingSeconds);
+    clock.closest('.live-quick-timer')?.classList.toggle('is-overdue', remainingSeconds <= 0);
+    const state = card.querySelector('[data-quick-state]');
+    if (state) {
+      state.textContent = session?.status === 'running' && remainingSeconds <= 0
+        ? 'OVERTIME'
+        : session?.status.toUpperCase() || 'READY';
+    }
   });
   if (selectedSessionDetails?.session) {
     document.getElementById('liveDialogClock').textContent = formatElapsed(sessionSeconds(selectedSessionDetails.session));
@@ -257,11 +276,16 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
       makeNode('div', 'live-slot-summary', `${formatDateTime(slot.starts_at)} – ${formatDateTime(slot.ends_at)}`),
     );
     const meta = makeNode('div', 'live-quick-booking-meta');
-    meta.append(makeNode('strong', '', quickSession ? quickSession.status.toUpperCase() : 'READY'));
+    const state = makeNode('strong', '', quickSession ? quickSession.status.toUpperCase() : 'READY');
+    state.dataset.quickState = '';
+    meta.append(state);
     meta.append(makeNode('span', '', `${quickBooking.players} ${quickBooking.players === 1 ? 'player' : 'players'} · ₹${quickBooking.total_price}`));
     card.append(meta);
     const timer = makeNode('div', `live-quick-timer${quickSession ? ` status-${quickSession.status}` : ''}`);
-    const clock = makeNode('strong', 'live-quick-clock', quickSession ? formatElapsed(sessionSeconds(quickSession)) : '00:00:00');
+    timer.append(makeNode('span', 'live-quick-timer-label', '40 MIN COUNTDOWN'));
+    const clock = makeNode('strong', 'live-quick-clock', formatCountdown(
+      quickBookingDurationSeconds - (quickSession ? sessionSeconds(quickSession) : 0),
+    ));
     clock.dataset.quickClock = '';
     timer.append(clock);
     card.append(timer);
@@ -273,7 +297,11 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
       button.addEventListener('click', async () => {
         if (confirmMessage && !window.confirm(confirmMessage)) return;
         button.disabled = true;
-        await runQuickBookingTimerAction(quickBooking.id, action);
+        try {
+          await runQuickBookingTimerAction(quickBooking.id, action);
+        } finally {
+          if (button.isConnected) button.disabled = false;
+        }
       });
       actions.append(button);
     };

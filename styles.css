@@ -1808,14 +1808,18 @@ tbody tr:last-child td { border-bottom: 0; }
 .live-slot-card.is-quick-booking { border-color: rgba(230, 251, 86, 0.32); background: rgba(230, 251, 86, 0.045); }
 .live-quick-booking-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; color: #c4c1cd; font-size: 12px; }
 .live-quick-booking-meta strong { color: var(--yellow); }
-.live-quick-timer { display: flex; justify-content: center; margin-top: 14px; padding: 12px; border: 1px solid rgba(230, 251, 86, 0.24); background: rgba(230, 251, 86, 0.06); }
+.live-quick-timer { display: grid; justify-items: center; gap: 4px; margin-top: 14px; padding: 12px; border: 1px solid rgba(230, 251, 86, 0.24); background: rgba(230, 251, 86, 0.06); }
 .live-quick-timer.status-running { border-color: rgba(83, 224, 170, 0.35); background: rgba(36, 155, 111, 0.1); }
 .live-quick-timer.status-paused { border-color: rgba(255, 209, 106, 0.35); background: rgba(180, 133, 35, 0.1); }
 .live-quick-timer.status-stopped { border-color: rgba(191, 132, 255, 0.3); background: rgba(126, 58, 196, 0.1); }
+.live-quick-timer-label { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: 0.12em; }
 .live-quick-clock { color: var(--yellow); font: 700 36px/1 var(--display); font-variant-numeric: tabular-nums; }
 .live-quick-timer.status-running .live-quick-clock { color: #8cf2d8; }
 .live-quick-timer.status-paused .live-quick-clock { color: #ffd16a; }
 .live-quick-timer.status-stopped .live-quick-clock { color: #d4a6ff; }
+.live-quick-timer.is-overdue { border-color: rgba(255, 76, 76, 0.65); background: rgba(168, 27, 38, 0.18); }
+.live-quick-timer.is-overdue .live-quick-clock,
+.live-quick-timer.is-overdue .live-quick-timer-label { color: #ff6b72; }
 .live-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .live-header-password-form { display: grid; gap: 15px; }
 .live-header-password-form > .eyebrow,

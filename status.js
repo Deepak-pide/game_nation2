@@ -10,14 +10,7 @@ const bookingConfirmTitle = document.getElementById('bookingConfirmTitle');
 const bookingConfirmDetails = document.getElementById('bookingConfirmDetails');
 const bookingConfirmYes = document.getElementById('bookingConfirmYes');
 const bookingConfirmNo = document.getElementById('bookingConfirmNo');
-const quickBookDialog = document.getElementById('quickBookDialog');
-const quickBookForm = document.getElementById('quickBookForm');
-const quickBookFeedback = document.getElementById('quickBookFeedback');
-const quickBookSubmit = quickBookForm.querySelector('[type="submit"]');
-const quickBookPrice = document.getElementById('quickBookPrice');
-const QUICK_BOOK_PRICE_PER_PLAYER = 20;
 let pendingConfirmation;
-let selectedQuickSlot;
 let bookingNotice = '';
 
 const getLocalDateString = (date = new Date()) => {
@@ -43,11 +36,6 @@ const formatDateLabel = (dateString) => {
 const formatTime = (dateString) => new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
   .format(new Date(dateString));
 
-const updateQuickBookPrice = () => {
-  const players = Number(quickBookForm.elements.players.value);
-  quickBookPrice.textContent = `Price: ₹${QUICK_BOOK_PRICE_PER_PLAYER} per player · Total: ₹${players * QUICK_BOOK_PRICE_PER_PLAYER}`;
-};
-
 const loadConsoles = async () => {
   const { data, error } = await supabase.from('consoles')
     .select('id,name,platform').eq('active', true).order('name');
@@ -70,18 +58,6 @@ const updateBooking = async (bookingId) => {
   await renderSlots();
 };
 
-const openQuickBookForm = (slot) => {
-  selectedQuickSlot = slot;
-  document.getElementById('quickBookDetails').textContent =
-    `${consoleSelect.selectedOptions[0]?.textContent || 'Selected console'} · ${formatDateLabel(bookingDateInput.value)} · ${formatTime(slot.starts_at)} to ${formatTime(slot.ends_at)}`;
-  quickBookFeedback.textContent = '';
-  quickBookForm.elements.name.value = '';
-  quickBookForm.elements.players.value = '1';
-  updateQuickBookPrice();
-  quickBookDialog.showModal();
-  quickBookForm.elements.name.focus();
-};
-
 const renderSlot = (slot, booking, user) => {
   const confirmed = booking && ['approved', 'completed'].includes(booking.status);
   const quickBooked = booking?.status === 'quick_booked';
@@ -92,22 +68,22 @@ const renderSlot = (slot, booking, user) => {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = `slot-button${confirmed || quickBooked ? ' is-booked' : ''}${pending ? ' is-pending' : ''}${isPast && !pending ? ' is-past' : ''}`;
-  button.disabled = confirmed || quickBooked || (!pending && isPast) || (!booking && !slot.available);
-  button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${quickBooked ? 'quick booked' : confirmed ? 'confirmed' : pending ? 'request pending' : isPast ? 'time has passed' : slot.available ? 'available' : 'unavailable'}`);
+  button.disabled = confirmed || quickBooked || (!pending && isPast) || (!booking && (!slot.available || !user));
+  button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${quickBooked ? 'booked' : confirmed ? 'confirmed' : pending ? 'request pending' : isPast ? 'time has passed' : slot.available ? 'available' : 'unavailable'}`);
 
   const time = document.createElement('span');
   time.className = 'slot-time';
   time.textContent = formatTime(slot.starts_at);
   const state = document.createElement('span');
   state.className = 'slot-state';
-  state.textContent = quickBooked ? 'Quick booked' : confirmed ? 'Confirmed' : pending ? 'Pending approval' : isPast ? 'Time passed' : slot.available ? 'Request slot' : 'Unavailable';
+  state.textContent = quickBooked ? 'Booked' : confirmed ? 'Confirmed' : pending ? 'Pending approval' : isPast ? 'Time passed' : !user && slot.available ? 'Sign in to request' : slot.available ? 'Request slot' : 'Unavailable';
   button.append(time, state);
 
   if (pending && booking.user_id === user?.id) {
     button.disabled = false;
     button.addEventListener('click', () => confirmSelection(slot, 'cancel', booking));
-  } else if (!booking && slot.available && !isPast) {
-    button.addEventListener('click', () => openQuickBookForm(slot));
+  } else if (!booking && slot.available && !isPast && user) {
+    button.addEventListener('click', () => confirmSelection(slot, 'book'));
   }
   choices.append(button);
   return choices;
@@ -135,42 +111,6 @@ bookingConfirmYes.addEventListener('click', async () => {
   bookingConfirmDialog.close();
   if (action === 'book') await requestBooking(slot);
   else await updateBooking(booking.id);
-});
-
-document.getElementById('quickBookCancel').addEventListener('click', () => quickBookDialog.close());
-quickBookForm.querySelectorAll('[name="players"]').forEach((input) => {
-  input.addEventListener('change', updateQuickBookPrice);
-});
-quickBookDialog.addEventListener('close', () => {
-  selectedQuickSlot = null;
-  quickBookSubmit.disabled = false;
-});
-quickBookForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  if (!selectedQuickSlot) return;
-  const name = quickBookForm.elements.name.value.trim();
-  const players = Number(quickBookForm.elements.players.value);
-  if (!name) {
-    showMessage(quickBookFeedback, 'Enter your name to book this slot.', true);
-    return;
-  }
-  quickBookSubmit.disabled = true;
-  showMessage(quickBookFeedback, 'Saving your quick booking…');
-  const { error } = await supabase.rpc('create_quick_booking', {
-    p_slot_id: selectedQuickSlot.id,
-    p_name: name,
-    p_players: players,
-  });
-  if (error) {
-    showMessage(quickBookFeedback, error.message, true);
-    quickBookSubmit.disabled = false;
-    return;
-  }
-  const selectedTime = formatTime(selectedQuickSlot.starts_at);
-  quickBookDialog.close();
-  bookingNotice = `Quick booking saved for ${name} at ${selectedTime}. No admin confirmation is needed.`;
-  await renderSlots();
-  showMessage(bookingFeedback, bookingNotice);
 });
 
 const renderSlots = async (newRequest = null) => {
@@ -201,7 +141,7 @@ const renderSlots = async (newRequest = null) => {
       .eq('console_id', consoleSelect.value).gte('starts_at', start).lt('starts_at', end));
   }
   const [slotsResult, confirmedResult, quickBookedResult, ownBookingsResult] = await Promise.all(requests);
-  const failed = [slotsResult, confirmedResult, ownBookingsResult].find((result) => result?.error);
+  const failed = [slotsResult, confirmedResult, quickBookedResult, ownBookingsResult].find((result) => result?.error);
   if (failed) {
     showMessage(bookingFeedback, failed.error.message, true);
     return false;

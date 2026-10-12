@@ -18,6 +18,79 @@ const start = async () => {
   const consoleList = document.getElementById('consoleList');
   const slotBody = document.getElementById('adminSlots');
   const consoleSelect = document.getElementById('availabilityConsole');
+  const quickBookingForm = document.getElementById('quickBookingForm');
+  const quickBookingConsole = document.getElementById('quickBookingConsole');
+  const quickBookingDate = document.getElementById('quickBookingDate');
+  const quickBookingSlot = document.getElementById('quickBookingSlot');
+  const quickBookingPlayers = document.getElementById('quickBookingPlayers');
+  const quickBookingSubmit = document.getElementById('quickBookingSubmit');
+  const quickBookingFeedback = document.getElementById('quickBookingFeedback');
+  const quickBookingPrice = document.getElementById('adminQuickBookingPrice');
+  const loadQuickBookingSlots = async () => {
+    quickBookingSubmit.disabled = true;
+    quickBookingSlot.replaceChildren();
+    if (!quickBookingConsole.value || !quickBookingDate.value) {
+      const prompt = document.createElement('option');
+      prompt.value = '';
+      prompt.textContent = 'Choose a console and date first';
+      quickBookingSlot.append(prompt);
+      quickBookingSlot.disabled = true;
+      return;
+    }
+    const dateStart = new Date(`${quickBookingDate.value}T00:00:00`);
+    const dateEnd = new Date(dateStart);
+    dateEnd.setDate(dateEnd.getDate() + 1);
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Loading available slots…';
+    quickBookingSlot.append(placeholder);
+    quickBookingSlot.disabled = true;
+    const [slotsResult, quickBookingsResult, bookingsResult] = await Promise.all([
+      supabase.from('availability_slots')
+        .select('id,console_id,starts_at,ends_at')
+        .eq('console_id', quickBookingConsole.value)
+        .eq('available', true)
+        .gte('starts_at', dateStart.toISOString())
+        .lt('starts_at', dateEnd.toISOString())
+        .order('starts_at'),
+      supabase.from('quick_bookings').select('slot_id'),
+      supabase.from('bookings').select('starts_at,ends_at')
+        .eq('console_id', quickBookingConsole.value)
+        .in('status', ['pending', 'approved', 'completed'])
+        .lt('starts_at', dateEnd.toISOString())
+        .gt('ends_at', dateStart.toISOString()),
+    ]);
+    const failure = [slotsResult, quickBookingsResult, bookingsResult].find((result) => result.error);
+    if (failure) {
+      showMessage(quickBookingFeedback, failure.error.message, true);
+      placeholder.textContent = 'Could not load available slots';
+      quickBookingSlot.disabled = true;
+      return;
+    }
+    const quickBookedSlotIds = new Set(quickBookingsResult.data.map((booking) => booking.slot_id));
+    const openSlots = slotsResult.data.filter((slot) => {
+      const startTime = new Date(slot.starts_at).getTime();
+      const endTime = new Date(slot.ends_at).getTime();
+      return startTime > Date.now()
+        && !quickBookedSlotIds.has(slot.id)
+        && !bookingsResult.data.some((booking) =>
+          new Date(booking.starts_at).getTime() < endTime
+          && new Date(booking.ends_at).getTime() > startTime);
+    });
+    quickBookingSlot.replaceChildren();
+    const prompt = document.createElement('option');
+    prompt.value = '';
+    prompt.textContent = openSlots.length ? 'Choose an available slot' : 'No available slots on this date';
+    quickBookingSlot.append(prompt);
+    for (const slot of openSlots) {
+      const option = document.createElement('option');
+      option.value = slot.id;
+      option.textContent = `${dateTime(slot.starts_at)} – ${dateTime(slot.ends_at)}`;
+      quickBookingSlot.append(option);
+    }
+    quickBookingSlot.disabled = !openSlots.length;
+    quickBookingSubmit.disabled = !openSlots.length;
+  };
   const load = async () => {
     const [consolesResult, slotsResult] = await Promise.all([
       supabase.from('consoles').select('id,name,platform,hourly_rate,active').order('name'),
@@ -92,6 +165,14 @@ const start = async () => {
       option.textContent = item.name;
       consoleSelect.append(option);
     });
+    quickBookingConsole.replaceChildren();
+    consolesResult.data.filter((item) => item.active).forEach((item) => {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.name;
+      quickBookingConsole.append(option);
+    });
+    quickBookingConsole.disabled = !quickBookingConsole.options.length;
     slotBody.replaceChildren();
     slotsResult.data.forEach((slot) => {
       const row = document.createElement('tr');
@@ -120,6 +201,7 @@ const start = async () => {
       slotBody.append(row);
     });
     document.getElementById('adminSlotsEmpty').hidden = slotsResult.data.length > 0;
+    await loadQuickBookingSlots();
   };
 
   document.getElementById('consoleForm').addEventListener('submit', async (event) => {
@@ -174,6 +256,38 @@ const start = async () => {
     form.elements.end_time.value = '';
     await load();
   });
+  quickBookingDate.value = dateValue(today);
+  quickBookingDate.min = dateValue(today);
+  quickBookingConsole.addEventListener('change', () => {
+    showMessage(quickBookingFeedback, '');
+    loadQuickBookingSlots();
+  });
+  quickBookingDate.addEventListener('change', () => {
+    showMessage(quickBookingFeedback, '');
+    loadQuickBookingSlots();
+  });
+  quickBookingPlayers.addEventListener('change', () => {
+    quickBookingPrice.textContent = `Price: ₹20 per player · Total: ₹${Number(quickBookingPlayers.value) * 20}`;
+  });
+  quickBookingForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    quickBookingSubmit.disabled = true;
+    showMessage(quickBookingFeedback, 'Saving admin Quick Book reservation…');
+    const { error } = await supabase.rpc('admin_create_quick_booking', {
+      p_slot_id: quickBookingSlot.value,
+      p_name: quickBookingForm.elements.name.value.trim(),
+      p_players: Number(quickBookingPlayers.value),
+    });
+    quickBookingSubmit.disabled = false;
+    if (error) {
+      showMessage(quickBookingFeedback, error.message, true);
+      await loadQuickBookingSlots();
+      return;
+    }
+    quickBookingForm.elements.name.value = '';
+    await load();
+    showMessage(quickBookingFeedback, 'Quick Book reservation saved. Start and control its 40-minute timer from Live sessions.');
+  });
   const dateInput = document.querySelector('#availabilityForm [name="date"]');
   dateInput.value = dateValue(today);
   dateInput.min = dateValue(today);
@@ -181,6 +295,8 @@ const start = async () => {
   supabase.channel('admin-slot-page')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'consoles' }, load)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'availability_slots' }, load)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, load)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_bookings' }, load)
     .subscribe();
 };
 
