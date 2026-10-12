@@ -47,6 +47,10 @@ const updateClocks = () => {
     const session = card?.sessionData;
     if (session) clock.textContent = formatElapsed(sessionSeconds(session));
   });
+  slotsContainer.querySelectorAll('[data-quick-clock]').forEach((clock) => {
+    const card = clock.closest('[data-quick-session]');
+    if (card?.quickSessionData) clock.textContent = formatElapsed(sessionSeconds(card.quickSessionData));
+  });
   if (selectedSessionDetails?.session) {
     document.getElementById('liveDialogClock').textContent = formatElapsed(sessionSeconds(selectedSessionDetails.session));
   }
@@ -70,6 +74,32 @@ const runAction = async (sessionId, action) => {
       : action === 'resume'
         ? 'Session resumed.'
         : '');
+  await loadSlots();
+};
+
+const runQuickBookingTimerAction = async (quickBookingId, action) => {
+  const actionLabels = {
+    start: 'Starting Quick Book timer…',
+    pause: 'Pausing Quick Book timer…',
+    resume: 'Resuming Quick Book timer…',
+    stop: 'Stopping Quick Book timer…',
+  };
+  showMessage(feedback, actionLabels[action]);
+  const { error } = await client.rpc('admin_update_quick_booking_session', {
+    p_quick_booking_id: quickBookingId,
+    p_action: action,
+  });
+  if (error) {
+    showMessage(feedback, error.message, true);
+    return;
+  }
+  showMessage(feedback, action === 'start'
+    ? 'Quick Book timer started.'
+    : action === 'pause'
+      ? 'Quick Book timer paused.'
+      : action === 'resume'
+        ? 'Quick Book timer resumed.'
+        : 'Quick Book timer stopped.');
   await loadSlots();
 };
 
@@ -174,7 +204,7 @@ const renderSessionDialog = (details) => {
   }
 };
 
-const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings }) => {
+const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickSessions }) => {
   slotsContainer.replaceChildren();
   const activeSessions = new Map(sessions.map((session) => [session.booking_id, session]));
   const walletByGamer = new Map(wallets.map((wallet) => [wallet.user_id, wallet]));
@@ -217,15 +247,46 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings }) => {
     const slot = quickBooking.slot;
     if (!slot) continue;
     const card = makeNode('article', 'live-slot-card is-quick-booking');
+    const quickSession = quickSessions.get(quickBooking.id) || null;
+    card.dataset.quickSession = '';
+    card.quickSessionData = quickSession;
+    if (quickSession) card.classList.add(`is-quick-session-${quickSession.status}`);
     card.append(
       makeNode('div', 'live-slot-card-topline', `${slot.console?.name || 'Console'} · QUICK BOOKED`),
       makeNode('h2', '', quickBooking.name),
-      makeNode('div', 'live-slot-summary', formatDateTime(slot.starts_at)),
+      makeNode('div', 'live-slot-summary', `${formatDateTime(slot.starts_at)} – ${formatDateTime(slot.ends_at)}`),
     );
     const meta = makeNode('div', 'live-quick-booking-meta');
-    meta.append(makeNode('strong', '', 'Saved · No admin approval'));
-    meta.append(makeNode('span', '', `${quickBooking.players} ${quickBooking.players === 1 ? 'player' : 'players'}`));
+    meta.append(makeNode('strong', '', quickSession ? quickSession.status.toUpperCase() : 'READY'));
+    meta.append(makeNode('span', '', `${quickBooking.players} ${quickBooking.players === 1 ? 'player' : 'players'} · ₹${quickBooking.total_price}`));
     card.append(meta);
+    const timer = makeNode('div', `live-quick-timer${quickSession ? ` status-${quickSession.status}` : ''}`);
+    const clock = makeNode('strong', 'live-quick-clock', quickSession ? formatElapsed(sessionSeconds(quickSession)) : '00:00:00');
+    clock.dataset.quickClock = '';
+    timer.append(clock);
+    card.append(timer);
+
+    const actions = makeNode('div', 'live-quick-actions');
+    const addQuickAction = (label, action, className = '', confirmMessage = '') => {
+      const button = makeNode('button', `table-action ${className}`.trim(), label);
+      button.type = 'button';
+      button.addEventListener('click', async () => {
+        if (confirmMessage && !window.confirm(confirmMessage)) return;
+        button.disabled = true;
+        await runQuickBookingTimerAction(quickBooking.id, action);
+      });
+      actions.append(button);
+    };
+    if (!quickSession) {
+      addQuickAction('Start timer', 'start', 'live-start-action');
+    } else if (quickSession.status === 'running') {
+      addQuickAction('Pause timer', 'pause');
+      addQuickAction('Stop timer', 'stop', 'is-danger', 'Stop this Quick Book timer? This cannot be resumed.');
+    } else if (quickSession.status === 'paused') {
+      addQuickAction('Resume timer', 'resume', 'live-start-action');
+      addQuickAction('Stop timer', 'stop', 'is-danger', 'Stop this Quick Book timer? This cannot be resumed.');
+    }
+    if (actions.childElementCount) card.append(actions);
     slotsContainer.append(card);
   }
   empty.hidden = visibleBookings.size + quickBookings.length > 0;
@@ -255,16 +316,19 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings }) => {
 };
 
 const loadSlots = async () => {
-  const [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult] = await Promise.all([
+  const [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult, quickSessionsResult] = await Promise.all([
     client.from('availability_slots').select('id,console_id,starts_at,ends_at,available,console:consoles(name)').order('starts_at'),
     client.from('bookings').select('id,user_id,console_id,starts_at,ends_at,status,profile:profiles!bookings_user_id_fkey(full_name,game_id,phone,game_tags)').order('starts_at'),
     client.from('live_sessions').select('id,booking_id,user_id,console_id,status,accumulated_seconds,charged_minutes,started_at,last_heartbeat_at,ended_at').order('created_at', { ascending: false }),
     client.rpc('get_admin_wallet_overview'),
     client.from('quick_bookings')
-      .select('id,name,players,slot:availability_slots(starts_at,ends_at,console:consoles(name))')
+      .select('id,name,players,total_price,slot:availability_slots(starts_at,ends_at,console:consoles(name))')
+      .order('created_at', { ascending: false }),
+    client.from('quick_booking_sessions')
+      .select('id,quick_booking_id,status,accumulated_seconds,started_at,ended_at')
       .order('created_at', { ascending: false }),
   ]);
-  const failure = [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult].find((result) => result.error);
+  const failure = [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult, quickSessionsResult].find((result) => result.error);
   if (failure) {
     showMessage(feedback, failure.error.message, true);
     return;
@@ -275,6 +339,7 @@ const loadSlots = async () => {
     sessions: sessionsResult.data,
     wallets: walletsResult.data,
     quickBookings: quickBookingsResult.data,
+    quickSessions: new Map(quickSessionsResult.data.map((session) => [session.quick_booking_id, session])),
   });
   showMessage(feedback, '');
 };
@@ -380,6 +445,7 @@ const start = async () => {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'live_sessions' }, loadSlots)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_transactions' }, loadSlots)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_bookings' }, loadSlots)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_booking_sessions' }, loadSlots)
     .subscribe();
   clockInterval = window.setInterval(updateClocks, 1000);
   syncInterval = window.setInterval(syncRunningSessions, 15000);

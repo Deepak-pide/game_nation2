@@ -5,8 +5,19 @@ create table if not exists public.quick_bookings (
   slot_id uuid not null unique references public.availability_slots(id) on delete cascade,
   name text not null check (length(btrim(name)) between 1 and 80),
   players smallint not null check (players in (1, 2, 3)),
+  total_price numeric(10, 2) not null default 0 check (total_price >= 0),
   created_at timestamptz not null default now()
 );
+
+alter table public.quick_bookings
+  add column if not exists total_price numeric(10, 2) not null default 0;
+update public.quick_bookings
+   set total_price = players * 20
+ where total_price = 0;
+alter table public.quick_bookings
+  drop constraint if exists quick_bookings_total_price_check;
+alter table public.quick_bookings
+  add constraint quick_bookings_total_price_check check (total_price >= 0);
 
 alter table public.quick_bookings enable row level security;
 
@@ -34,7 +45,7 @@ begin
     raise exception 'Choose 1, 2, or 3 players';
   end if;
 
-  select slot
+  select slot.*
     into target_slot
     from public.availability_slots slot
    where slot.id = p_slot_id
@@ -73,8 +84,8 @@ begin
     raise exception 'That slot is already booked or awaiting admin approval';
   end if;
 
-  insert into public.quick_bookings (slot_id, name, players)
-  values (target_slot.id, btrim(p_name), p_players)
+  insert into public.quick_bookings (slot_id, name, players, total_price)
+  values (target_slot.id, btrim(p_name), p_players, p_players * 20)
   returning id into created_id;
   return created_id;
 end;

@@ -1396,18 +1396,6 @@ button {
 
 .slot-choices { display: grid; gap: 7px; min-width: 0; }
 .slot-choices .slot-button { width: 100%; }
-.quick-book-slot-button {
-  min-height: 36px;
-  border: 1px solid rgba(230, 251, 86, 0.4);
-  border-radius: 4px;
-  background: rgba(230, 251, 86, 0.09);
-  color: var(--yellow);
-  font: 700 11px var(--body);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.quick-book-slot-button:hover { background: rgba(230, 251, 86, 0.18); }
-.quick-book-slot-button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
 
 .slot-button {
   display: flex;
@@ -1500,6 +1488,7 @@ button {
 .quick-player-figures { display: flex; height: 38px; align-items: end; justify-content: center; gap: 1px; }
 .quick-player-figures svg { width: 22px; height: 30px; fill: currentColor; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .quick-player-figures svg path { fill: none; }
+.quick-book-price { margin: 0; padding: 12px; border: 1px solid rgba(230, 251, 86, 0.24); background: rgba(230, 251, 86, 0.06); color: var(--yellow); font-size: 13px; font-weight: 700; text-align: center; }
 .quick-book-form .private-booking-feedback { margin: 0; }
 .quick-book-form .booking-confirm-actions { margin-top: 2px; }
 
@@ -1513,7 +1502,6 @@ button {
   .status-date-control { min-width: 0; }
   .status-overview { align-items: flex-start; flex-direction: column; gap: 12px; }
   .slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
-  .quick-book-slot-button { min-height: 40px; }
   .slot-button { align-items: flex-start; flex-direction: column; justify-content: center; gap: 7px; min-height: 80px; padding: 12px; }
   .slot-time { font-size: 14px; }
   .slot-state { font-size: 10px; }
@@ -1820,7 +1808,15 @@ tbody tr:last-child td { border-bottom: 0; }
 .live-slot-card.is-quick-booking { border-color: rgba(230, 251, 86, 0.32); background: rgba(230, 251, 86, 0.045); }
 .live-quick-booking-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; color: #c4c1cd; font-size: 12px; }
 .live-quick-booking-meta strong { color: var(--yellow); }
-.live-schedule-actions { display: flex; align-items: center; gap: 9px; }
+.live-quick-timer { display: flex; justify-content: center; margin-top: 14px; padding: 12px; border: 1px solid rgba(230, 251, 86, 0.24); background: rgba(230, 251, 86, 0.06); }
+.live-quick-timer.status-running { border-color: rgba(83, 224, 170, 0.35); background: rgba(36, 155, 111, 0.1); }
+.live-quick-timer.status-paused { border-color: rgba(255, 209, 106, 0.35); background: rgba(180, 133, 35, 0.1); }
+.live-quick-timer.status-stopped { border-color: rgba(191, 132, 255, 0.3); background: rgba(126, 58, 196, 0.1); }
+.live-quick-clock { color: var(--yellow); font: 700 36px/1 var(--display); font-variant-numeric: tabular-nums; }
+.live-quick-timer.status-running .live-quick-clock { color: #8cf2d8; }
+.live-quick-timer.status-paused .live-quick-clock { color: #ffd16a; }
+.live-quick-timer.status-stopped .live-quick-clock { color: #d4a6ff; }
+.live-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .live-header-password-form { display: grid; gap: 15px; }
 .live-header-password-form > .eyebrow,
 .live-header-password-form > h2,

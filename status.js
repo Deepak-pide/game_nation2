@@ -14,6 +14,8 @@ const quickBookDialog = document.getElementById('quickBookDialog');
 const quickBookForm = document.getElementById('quickBookForm');
 const quickBookFeedback = document.getElementById('quickBookFeedback');
 const quickBookSubmit = quickBookForm.querySelector('[type="submit"]');
+const quickBookPrice = document.getElementById('quickBookPrice');
+const QUICK_BOOK_PRICE_PER_PLAYER = 20;
 let pendingConfirmation;
 let selectedQuickSlot;
 let bookingNotice = '';
@@ -41,6 +43,11 @@ const formatDateLabel = (dateString) => {
 const formatTime = (dateString) => new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
   .format(new Date(dateString));
 
+const updateQuickBookPrice = () => {
+  const players = Number(quickBookForm.elements.players.value);
+  quickBookPrice.textContent = `Price: ₹${QUICK_BOOK_PRICE_PER_PLAYER} per player · Total: ₹${players * QUICK_BOOK_PRICE_PER_PLAYER}`;
+};
+
 const loadConsoles = async () => {
   const { data, error } = await supabase.from('consoles')
     .select('id,name,platform').eq('active', true).order('name');
@@ -63,6 +70,18 @@ const updateBooking = async (bookingId) => {
   await renderSlots();
 };
 
+const openQuickBookForm = (slot) => {
+  selectedQuickSlot = slot;
+  document.getElementById('quickBookDetails').textContent =
+    `${consoleSelect.selectedOptions[0]?.textContent || 'Selected console'} · ${formatDateLabel(bookingDateInput.value)} · ${formatTime(slot.starts_at)} to ${formatTime(slot.ends_at)}`;
+  quickBookFeedback.textContent = '';
+  quickBookForm.elements.name.value = '';
+  quickBookForm.elements.players.value = '1';
+  updateQuickBookPrice();
+  quickBookDialog.showModal();
+  quickBookForm.elements.name.focus();
+};
+
 const renderSlot = (slot, booking, user) => {
   const confirmed = booking && ['approved', 'completed'].includes(booking.status);
   const quickBooked = booking?.status === 'quick_booked';
@@ -73,7 +92,7 @@ const renderSlot = (slot, booking, user) => {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = `slot-button${confirmed || quickBooked ? ' is-booked' : ''}${pending ? ' is-pending' : ''}${isPast && !pending ? ' is-past' : ''}`;
-  button.disabled = !user || confirmed || quickBooked || (!pending && isPast) || (!booking && !slot.available);
+  button.disabled = confirmed || quickBooked || (!pending && isPast) || (!booking && !slot.available);
   button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${quickBooked ? 'quick booked' : confirmed ? 'confirmed' : pending ? 'request pending' : isPast ? 'time has passed' : slot.available ? 'available' : 'unavailable'}`);
 
   const time = document.createElement('span');
@@ -87,28 +106,10 @@ const renderSlot = (slot, booking, user) => {
   if (pending && booking.user_id === user?.id) {
     button.disabled = false;
     button.addEventListener('click', () => confirmSelection(slot, 'cancel', booking));
-  } else if (!booking && slot.available && user) {
-    button.addEventListener('click', () => confirmSelection(slot, 'book'));
+  } else if (!booking && slot.available && !isPast) {
+    button.addEventListener('click', () => openQuickBookForm(slot));
   }
   choices.append(button);
-  if (!booking && slot.available && !isPast) {
-    const quickBookButton = document.createElement('button');
-    quickBookButton.type = 'button';
-    quickBookButton.className = 'quick-book-slot-button';
-    quickBookButton.textContent = 'Quick Book';
-    quickBookButton.setAttribute('aria-label', `Quick book ${formatTime(slot.starts_at)}`);
-    quickBookButton.addEventListener('click', () => {
-      selectedQuickSlot = slot;
-      document.getElementById('quickBookDetails').textContent =
-        `${consoleSelect.selectedOptions[0]?.textContent || 'Selected console'} · ${formatDateLabel(bookingDateInput.value)} · ${formatTime(slot.starts_at)} to ${formatTime(slot.ends_at)}`;
-      quickBookFeedback.textContent = '';
-      quickBookForm.elements.name.value = '';
-      quickBookForm.elements.players.value = '1';
-      quickBookDialog.showModal();
-      quickBookForm.elements.name.focus();
-    });
-    choices.append(quickBookButton);
-  }
   return choices;
 };
 
@@ -137,6 +138,9 @@ bookingConfirmYes.addEventListener('click', async () => {
 });
 
 document.getElementById('quickBookCancel').addEventListener('click', () => quickBookDialog.close());
+quickBookForm.querySelectorAll('[name="players"]').forEach((input) => {
+  input.addEventListener('change', updateQuickBookPrice);
+});
 quickBookDialog.addEventListener('close', () => {
   selectedQuickSlot = null;
   quickBookSubmit.disabled = false;
@@ -145,6 +149,7 @@ quickBookForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!selectedQuickSlot) return;
   const name = quickBookForm.elements.name.value.trim();
+  const players = Number(quickBookForm.elements.players.value);
   if (!name) {
     showMessage(quickBookFeedback, 'Enter your name to book this slot.', true);
     return;
@@ -154,7 +159,7 @@ quickBookForm.addEventListener('submit', async (event) => {
   const { error } = await supabase.rpc('create_quick_booking', {
     p_slot_id: selectedQuickSlot.id,
     p_name: name,
-    p_players: Number(quickBookForm.elements.players.value),
+    p_players: players,
   });
   if (error) {
     showMessage(quickBookFeedback, error.message, true);
