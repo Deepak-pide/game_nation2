@@ -6,6 +6,12 @@ const slotsContainer = document.getElementById('liveSlotList');
 const empty = document.getElementById('liveSlotsEmpty');
 const sessionDialog = document.getElementById('liveSessionDialog');
 const dialogActions = document.getElementById('liveDialogActions');
+const headerToggle = document.getElementById('liveHeaderToggle');
+const headerPasswordDialog = document.getElementById('liveHeaderPasswordDialog');
+const headerPasswordForm = document.getElementById('liveHeaderPasswordForm');
+const headerPasswordInput = document.getElementById('liveHeaderPassword');
+const headerPasswordFeedback = document.getElementById('liveHeaderPasswordFeedback');
+const headerPasswordSubmit = headerPasswordForm.querySelector('[type="submit"]');
 let client;
 let clockInterval;
 let syncInterval;
@@ -168,7 +174,7 @@ const renderSessionDialog = (details) => {
   }
 };
 
-const renderSlots = ({ slots, bookings, sessions, wallets }) => {
+const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings }) => {
   slotsContainer.replaceChildren();
   const activeSessions = new Map(sessions.map((session) => [session.booking_id, session]));
   const walletByGamer = new Map(wallets.map((wallet) => [wallet.user_id, wallet]));
@@ -207,7 +213,22 @@ const renderSlots = ({ slots, bookings, sessions, wallets }) => {
     card.append(openButton);
     slotsContainer.append(card);
   }
-  empty.hidden = visibleBookings.size > 0;
+  for (const quickBooking of quickBookings) {
+    const slot = quickBooking.slot;
+    if (!slot) continue;
+    const card = makeNode('article', 'live-slot-card is-quick-booking');
+    card.append(
+      makeNode('div', 'live-slot-card-topline', `${slot.console?.name || 'Console'} · QUICK BOOKED`),
+      makeNode('h2', '', quickBooking.name),
+      makeNode('div', 'live-slot-summary', formatDateTime(slot.starts_at)),
+    );
+    const meta = makeNode('div', 'live-quick-booking-meta');
+    meta.append(makeNode('strong', '', 'Saved · No admin approval'));
+    meta.append(makeNode('span', '', `${quickBooking.players} ${quickBooking.players === 1 ? 'player' : 'players'}`));
+    card.append(meta);
+    slotsContainer.append(card);
+  }
+  empty.hidden = visibleBookings.size + quickBookings.length > 0;
   if (selectedSessionDetails) {
     const refreshed = [...visibleBookings].includes(selectedSessionDetails.booking.id)
       ? Array.from(slots).find((slot) =>
@@ -234,18 +255,27 @@ const renderSlots = ({ slots, bookings, sessions, wallets }) => {
 };
 
 const loadSlots = async () => {
-  const [slotsResult, bookingsResult, sessionsResult, walletsResult] = await Promise.all([
+  const [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult] = await Promise.all([
     client.from('availability_slots').select('id,console_id,starts_at,ends_at,available,console:consoles(name)').order('starts_at'),
     client.from('bookings').select('id,user_id,console_id,starts_at,ends_at,status,profile:profiles!bookings_user_id_fkey(full_name,game_id,phone,game_tags)').order('starts_at'),
     client.from('live_sessions').select('id,booking_id,user_id,console_id,status,accumulated_seconds,charged_minutes,started_at,last_heartbeat_at,ended_at').order('created_at', { ascending: false }),
     client.rpc('get_admin_wallet_overview'),
+    client.from('quick_bookings')
+      .select('id,name,players,slot:availability_slots(starts_at,ends_at,console:consoles(name))')
+      .order('created_at', { ascending: false }),
   ]);
-  const failure = [slotsResult, bookingsResult, sessionsResult, walletsResult].find((result) => result.error);
+  const failure = [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult].find((result) => result.error);
   if (failure) {
     showMessage(feedback, failure.error.message, true);
     return;
   }
-  renderSlots({ slots: slotsResult.data, bookings: bookingsResult.data, sessions: sessionsResult.data, wallets: walletsResult.data });
+  renderSlots({
+    slots: slotsResult.data,
+    bookings: bookingsResult.data,
+    sessions: sessionsResult.data,
+    wallets: walletsResult.data,
+    quickBookings: quickBookingsResult.data,
+  });
   showMessage(feedback, '');
 };
 
@@ -285,6 +315,48 @@ const start = async () => {
   const admin = await initializeAdminPage();
   if (!admin) return;
   client = admin.supabase;
+  const setHeaderHidden = (hidden) => {
+    document.body.classList.toggle('live-header-hidden', hidden);
+    headerToggle.setAttribute('aria-pressed', String(hidden));
+    headerToggle.setAttribute('aria-label', hidden ? 'Show site header (admin password required)' : 'Hide site header');
+    headerToggle.querySelector('.live-header-eye-open').hidden = hidden;
+    headerToggle.querySelector('.live-header-eye-closed').hidden = !hidden;
+    if (hidden) localStorage.setItem('adminLiveHeaderHidden', 'true');
+    else localStorage.removeItem('adminLiveHeaderHidden');
+  };
+  setHeaderHidden(localStorage.getItem('adminLiveHeaderHidden') === 'true');
+  headerToggle.addEventListener('click', () => {
+    if (!document.body.classList.contains('live-header-hidden')) {
+      setHeaderHidden(true);
+      return;
+    }
+    headerPasswordInput.value = '';
+    headerPasswordFeedback.textContent = '';
+    headerPasswordDialog.showModal();
+    headerPasswordInput.focus();
+  });
+  document.getElementById('cancelLiveHeaderPassword').addEventListener('click', () => headerPasswordDialog.close());
+  headerPasswordForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!admin.user.email) {
+      showMessage(headerPasswordFeedback, 'The signed-in admin account has no email address to verify.', true);
+      return;
+    }
+    headerPasswordSubmit.disabled = true;
+    showMessage(headerPasswordFeedback, 'Verifying admin password…');
+    const { error } = await client.auth.signInWithPassword({
+      email: admin.user.email,
+      password: headerPasswordInput.value,
+    });
+    headerPasswordSubmit.disabled = false;
+    if (error) {
+      showMessage(headerPasswordFeedback, error.message, true);
+      headerPasswordInput.focus();
+      return;
+    }
+    headerPasswordDialog.close();
+    setHeaderHidden(false);
+  });
   window.addEventListener('offline', () => {
     connectionUnavailable = true;
     connectionInterrupted = true;
@@ -307,6 +379,7 @@ const start = async () => {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, loadSlots)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'live_sessions' }, loadSlots)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_transactions' }, loadSlots)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_bookings' }, loadSlots)
     .subscribe();
   clockInterval = window.setInterval(updateClocks, 1000);
   syncInterval = window.setInterval(syncRunningSessions, 15000);

@@ -29,7 +29,7 @@
         <a href="index.html#pricing">Pricing</a>
         <a href="more-games.html">Explore</a>
         <a href="tournaments.html">Tournaments</a>
-        <a href="status.html" aria-current="page">Status</a>
+        <a href="status.html#quickBook" aria-current="page">Quick Book</a>
       </nav>
 
       <div class="header-actions" id="actionNavigation">
@@ -46,7 +46,7 @@
           <div>
             <p class="eyebrow"><span></span> Game Nation bookings</p>
             <h1 id="statusTitle">Slot status</h1>
-            <p class="status-heading-copy">Choose a console and date to request a session. Your slot shows Pending approval until an admin confirms it.</p>
+            <p class="status-heading-copy">Book a slot instantly with Quick Book, or sign in to send a request for admin approval.</p>
           </div>
           <div class="status-filters">
             <label class="status-date-control" for="consoleSelect">Console<select id="consoleSelect"></select></label>
@@ -54,17 +54,25 @@
           </div>
         </section>
 
-        <section aria-label="Booking slots">
+        <section class="quick-book-section" id="quickBook" aria-labelledby="quickBookTitle">
+          <div class="quick-book-heading">
+            <div><p class="eyebrow"><span></span> No account needed</p><h2 id="quickBookTitle">Quick Book</h2></div>
+            <p>Pick an open slot, enter your name and group size, and your booking is saved immediately — no admin confirmation needed.</p>
+          </div>
           <div class="status-overview">
             <p class="status-selected-date" id="selectedDateLabel"></p>
             <div class="status-legend" aria-label="Slot status key">
               <span><i aria-hidden="true"></i> Available</span>
-              <span><i class="booked-dot" aria-hidden="true"></i> Confirmed</span>
-              <span><i class="pending-dot" aria-hidden="true"></i> Pending</span>
+              <span><i class="booked-dot" aria-hidden="true"></i> Booked</span>
+              <span><i class="pending-dot" aria-hidden="true"></i> Pending request</span>
             </div>
           </div>
           <div id="slotGroups"></div>
           <p class="status-feedback" id="bookingFeedback" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="standard-booking-note" aria-label="Standard booking information">
+          <p>Prefer a booking request? Sign in to submit one for admin approval. Quick Book reservations are instant and do not need approval.</p>
         </section>
       </div>
     </main>
@@ -79,6 +87,28 @@
           <button class="nav-pill booking-confirm-yes" id="bookingConfirmYes" type="button">Yes, book it</button>
         </div>
       </div>
+    </dialog>
+
+    <dialog class="booking-confirm-dialog quick-book-dialog" id="quickBookDialog" aria-labelledby="quickBookDialogTitle">
+      <form class="booking-confirm-card quick-book-form" id="quickBookForm">
+        <p class="eyebrow"><span></span> Instant reservation</p>
+        <h2 id="quickBookDialogTitle">Quick Book this slot</h2>
+        <p class="booking-confirm-details" id="quickBookDetails"></p>
+        <label class="form-field">Your name<input name="name" maxlength="80" autocomplete="name" required /></label>
+        <fieldset class="quick-player-field">
+          <legend>How many players?</legend>
+          <div class="quick-player-options">
+            <label class="quick-player-option"><input type="radio" name="players" value="1" checked /><span class="quick-player-figures" aria-hidden="true"><svg viewBox="0 0 24 32"><circle cx="12" cy="6" r="4"></circle><path d="M5 29v-9a7 7 0 0 1 14 0v9M3 20h18M9 29v-8m6 8v-8"></path></svg></span><strong>1 player</strong></label>
+            <label class="quick-player-option"><input type="radio" name="players" value="2" /><span class="quick-player-figures" aria-hidden="true"><svg viewBox="0 0 24 32"><circle cx="12" cy="6" r="4"></circle><path d="M5 29v-9a7 7 0 0 1 14 0v9M3 20h18M9 29v-8m6 8v-8"></path></svg><svg viewBox="0 0 24 32"><circle cx="12" cy="6" r="4"></circle><path d="M5 29v-9a7 7 0 0 1 14 0v9M3 20h18M9 29v-8m6 8v-8"></path></svg></span><strong>2 players</strong></label>
+            <label class="quick-player-option"><input type="radio" name="players" value="3" /><span class="quick-player-figures"><svg viewBox="0 0 24 32" aria-hidden="true"><circle cx="12" cy="6" r="4"></circle><path d="M5 29v-9a7 7 0 0 1 14 0v9M3 20h18M9 29v-8m6 8v-8"></path></svg><svg viewBox="0 0 24 32" aria-hidden="true"><circle cx="12" cy="6" r="4"></circle><path d="M5 29v-9a7 7 0 0 1 14 0v9M3 20h18M9 29v-8m6 8v-8"></path></svg><svg viewBox="0 0 24 32" aria-hidden="true"><circle cx="12" cy="6" r="4"></circle><path d="M5 29v-9a7 7 0 0 1 14 0v9M3 20h18M9 29v-8m6 8v-8"></path></svg></span><strong>3 players</strong></label>
+          </div>
+        </fieldset>
+        <p class="private-booking-feedback" id="quickBookFeedback" role="status" aria-live="polite"></p>
+        <div class="booking-confirm-actions">
+          <button class="booking-confirm-no" id="quickBookCancel" type="button">Go back</button>
+          <button class="nav-pill booking-confirm-yes" type="submit">Book slot</button>
+        </div>
+      </form>
     </dialog>
 
     <script type="module" src="script.js"></script>

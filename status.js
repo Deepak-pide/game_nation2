@@ -10,7 +10,12 @@ const bookingConfirmTitle = document.getElementById('bookingConfirmTitle');
 const bookingConfirmDetails = document.getElementById('bookingConfirmDetails');
 const bookingConfirmYes = document.getElementById('bookingConfirmYes');
 const bookingConfirmNo = document.getElementById('bookingConfirmNo');
+const quickBookDialog = document.getElementById('quickBookDialog');
+const quickBookForm = document.getElementById('quickBookForm');
+const quickBookFeedback = document.getElementById('quickBookFeedback');
+const quickBookSubmit = quickBookForm.querySelector('[type="submit"]');
 let pendingConfirmation;
+let selectedQuickSlot;
 let bookingNotice = '';
 
 const getLocalDateString = (date = new Date()) => {
@@ -60,20 +65,23 @@ const updateBooking = async (bookingId) => {
 
 const renderSlot = (slot, booking, user) => {
   const confirmed = booking && ['approved', 'completed'].includes(booking.status);
+  const quickBooked = booking?.status === 'quick_booked';
   const pending = booking?.status === 'pending';
   const isPast = new Date(slot.starts_at).getTime() <= Date.now();
+  const choices = document.createElement('div');
+  choices.className = 'slot-choices';
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = `slot-button${confirmed ? ' is-booked' : ''}${pending ? ' is-pending' : ''}${isPast && !pending ? ' is-past' : ''}`;
-  button.disabled = !user || confirmed || (!pending && isPast) || (!booking && !slot.available);
-  button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${confirmed ? 'confirmed' : pending ? 'request pending' : isPast ? 'time has passed' : slot.available ? 'available' : 'unavailable'}`);
+  button.className = `slot-button${confirmed || quickBooked ? ' is-booked' : ''}${pending ? ' is-pending' : ''}${isPast && !pending ? ' is-past' : ''}`;
+  button.disabled = !user || confirmed || quickBooked || (!pending && isPast) || (!booking && !slot.available);
+  button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${quickBooked ? 'quick booked' : confirmed ? 'confirmed' : pending ? 'request pending' : isPast ? 'time has passed' : slot.available ? 'available' : 'unavailable'}`);
 
   const time = document.createElement('span');
   time.className = 'slot-time';
   time.textContent = formatTime(slot.starts_at);
   const state = document.createElement('span');
   state.className = 'slot-state';
-  state.textContent = confirmed ? 'Confirmed' : pending ? 'Pending approval' : isPast ? 'Time passed' : slot.available ? 'Request slot' : 'Unavailable';
+  state.textContent = quickBooked ? 'Quick booked' : confirmed ? 'Confirmed' : pending ? 'Pending approval' : isPast ? 'Time passed' : slot.available ? 'Request slot' : 'Unavailable';
   button.append(time, state);
 
   if (pending && booking.user_id === user?.id) {
@@ -82,7 +90,26 @@ const renderSlot = (slot, booking, user) => {
   } else if (!booking && slot.available && user) {
     button.addEventListener('click', () => confirmSelection(slot, 'book'));
   }
-  return button;
+  choices.append(button);
+  if (!booking && slot.available && !isPast) {
+    const quickBookButton = document.createElement('button');
+    quickBookButton.type = 'button';
+    quickBookButton.className = 'quick-book-slot-button';
+    quickBookButton.textContent = 'Quick Book';
+    quickBookButton.setAttribute('aria-label', `Quick book ${formatTime(slot.starts_at)}`);
+    quickBookButton.addEventListener('click', () => {
+      selectedQuickSlot = slot;
+      document.getElementById('quickBookDetails').textContent =
+        `${consoleSelect.selectedOptions[0]?.textContent || 'Selected console'} · ${formatDateLabel(bookingDateInput.value)} · ${formatTime(slot.starts_at)} to ${formatTime(slot.ends_at)}`;
+      quickBookFeedback.textContent = '';
+      quickBookForm.elements.name.value = '';
+      quickBookForm.elements.players.value = '1';
+      quickBookDialog.showModal();
+      quickBookForm.elements.name.focus();
+    });
+    choices.append(quickBookButton);
+  }
+  return choices;
 };
 
 const confirmSelection = (slot, action, booking = null) => {
@@ -109,6 +136,38 @@ bookingConfirmYes.addEventListener('click', async () => {
   else await updateBooking(booking.id);
 });
 
+document.getElementById('quickBookCancel').addEventListener('click', () => quickBookDialog.close());
+quickBookDialog.addEventListener('close', () => {
+  selectedQuickSlot = null;
+  quickBookSubmit.disabled = false;
+});
+quickBookForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!selectedQuickSlot) return;
+  const name = quickBookForm.elements.name.value.trim();
+  if (!name) {
+    showMessage(quickBookFeedback, 'Enter your name to book this slot.', true);
+    return;
+  }
+  quickBookSubmit.disabled = true;
+  showMessage(quickBookFeedback, 'Saving your quick booking…');
+  const { error } = await supabase.rpc('create_quick_booking', {
+    p_slot_id: selectedQuickSlot.id,
+    p_name: name,
+    p_players: Number(quickBookForm.elements.players.value),
+  });
+  if (error) {
+    showMessage(quickBookFeedback, error.message, true);
+    quickBookSubmit.disabled = false;
+    return;
+  }
+  const selectedTime = formatTime(selectedQuickSlot.starts_at);
+  quickBookDialog.close();
+  bookingNotice = `Quick booking saved for ${name} at ${selectedTime}. No admin confirmation is needed.`;
+  await renderSlots();
+  showMessage(bookingFeedback, bookingNotice);
+});
+
 const renderSlots = async (newRequest = null) => {
   if (!supabase || !consoleSelect.value || !bookingDateInput.value) return false;
   if (!bookingNotice) bookingFeedback.textContent = 'Loading availability…';
@@ -126,12 +185,17 @@ const renderSlots = async (newRequest = null) => {
       p_starts_at: start,
       p_ends_at: end,
     }),
+    supabase.rpc('quick_booked_console_slots', {
+      p_console_id: consoleSelect.value,
+      p_starts_at: start,
+      p_ends_at: end,
+    }),
   ];
   if (user) {
     requests.push(supabase.from('bookings').select('id,user_id,console_id,starts_at,ends_at,status')
       .eq('console_id', consoleSelect.value).gte('starts_at', start).lt('starts_at', end));
   }
-  const [slotsResult, confirmedResult, ownBookingsResult] = await Promise.all(requests);
+  const [slotsResult, confirmedResult, quickBookedResult, ownBookingsResult] = await Promise.all(requests);
   const failed = [slotsResult, confirmedResult, ownBookingsResult].find((result) => result?.error);
   if (failed) {
     showMessage(bookingFeedback, failed.error.message, true);
@@ -153,6 +217,11 @@ const renderSlots = async (newRequest = null) => {
     const slot = slotsResult.data.find((candidate) => new Date(candidate.starts_at) < new Date(confirmed.ends_at)
       && new Date(candidate.ends_at) > new Date(confirmed.starts_at));
     if (slot && !bookingsByStart.has(slot.starts_at)) bookingsByStart.set(slot.starts_at, { status: 'approved' });
+  }
+  for (const quickBooking of quickBookedResult.data) {
+    const slot = slotsResult.data.find((candidate) => new Date(candidate.starts_at) < new Date(quickBooking.ends_at)
+      && new Date(candidate.ends_at) > new Date(quickBooking.starts_at));
+    if (slot) bookingsByStart.set(slot.starts_at, { status: 'quick_booked' });
   }
 
   if (!slotsResult.data.length) {
