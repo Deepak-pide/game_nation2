@@ -31,7 +31,7 @@ const initializeOverview = async (supabase) => {
       const [bookingsResult, pendingResult, gamersResult, slotsResult] = await Promise.all([
         supabase.from('bookings').select('status,total_price,starts_at,ends_at'),
         supabase.from('bookings')
-          .select('id,user_id,starts_at,ends_at,total_price,profile:profiles!bookings_user_id_fkey(full_name,game_id),console:consoles(name)', { count: 'exact' })
+          .select('id,user_id,starts_at,ends_at,profile:profiles!bookings_user_id_fkey(full_name,game_id),console:consoles(name)', { count: 'exact' })
           .eq('status', 'pending').order('starts_at').limit(50),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'gamer'),
         supabase.from('availability_slots').select('starts_at,ends_at,available'),
@@ -93,7 +93,6 @@ const initializeOverview = async (supabase) => {
           makeNode('td', '', player),
           makeNode('td', '', booking.console?.name || 'Console'),
           makeNode('td', '', `${formatDateTime(booking.starts_at)} – ${new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(new Date(booking.ends_at))}`),
-          makeNode('td', '', formatMoney(booking.total_price)),
         );
         const actions = makeNode('td', 'admin-request-actions');
         for (const [status, label] of [['approved', 'Approve'], ['rejected', 'Reject']]) {

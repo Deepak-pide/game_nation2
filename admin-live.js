@@ -11,6 +11,8 @@ let clockInterval;
 let syncInterval;
 let isSyncing = false;
 let selectedSessionDetails = null;
+let connectionUnavailable = !navigator.onLine;
+let connectionInterrupted = !navigator.onLine || sessionStorage.getItem('liveSessionConnectionInterrupted') === 'true';
 
 const formatDateTime = (value) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 const formatElapsed = (seconds) => {
@@ -28,7 +30,9 @@ const makeNode = (tag, className, text) => {
 };
 const sessionSeconds = (session) => Number(session.accumulated_seconds)
   + (session.status === 'running' && session.started_at
-    ? Math.max(0, (Date.now() - new Date(session.started_at).getTime()) / 1000)
+    ? Math.max(0, ((connectionUnavailable && session.last_heartbeat_at
+      ? new Date(session.last_heartbeat_at).getTime()
+      : Date.now()) - new Date(session.started_at).getTime()) / 1000)
     : 0);
 
 const updateClocks = () => {
@@ -119,16 +123,13 @@ const renderSessionDialog = (details) => {
     : 'READY TO START';
   document.getElementById('liveDialogClock').textContent = session ? formatElapsed(sessionSeconds(session)) : '00:00:00';
   document.getElementById('liveDialogBilled').textContent = session
-    ? `${session.charged_minutes} complete minute(s) billed`
-    : 'No time billed yet';
+    ? `${Math.floor(sessionSeconds(session) / 60)} min used`
+    : 'No time used yet';
 
   const availableMinutes = wallet ? Math.max(0, Number(wallet.available_minutes)) : 0;
-  const rate = Number(session?.hourly_rate || wallet?.hourly_rate || 0);
   appendFacts(document.getElementById('liveDialogCreditFacts'), [
-    ['Credit balance', wallet ? `₹${Number(wallet.balance).toFixed(2)}` : 'Unavailable'],
-    ['Credit time limit', wallet ? `${Math.floor(availableMinutes / 60)} hr ${availableMinutes % 60} min` : 'Unavailable'],
-    ['Rate for this session', rate ? `₹${rate.toFixed(2)} / hour` : '—'],
-    ['Billed duration', session ? `${session.charged_minutes} min` : '0 min'],
+    ['Available playtime', wallet ? `${Math.floor(availableMinutes / 60)} hr ${availableMinutes % 60} min` : 'Unavailable'],
+    ['Completed minutes', session ? `${session.charged_minutes} min` : '0 min'],
   ]);
 
   dialogActions.replaceChildren();
@@ -150,7 +151,7 @@ const renderSessionDialog = (details) => {
     } else if (availableMinutes > 0) {
       addDialogAction('Resume timer', 'live-start-action', () => runAction(session.id, 'resume'));
     } else {
-      dialogActions.append(makeNode('span', 'live-slot-hint', 'Add gamer credit before resuming this timer.'));
+      dialogActions.append(makeNode('span', 'live-slot-hint', 'Add player playtime before resuming this timer.'));
     }
     addDialogAction(
       'Stop session',
@@ -159,9 +160,9 @@ const renderSessionDialog = (details) => {
       'Stop this session? Only complete minutes will be charged.',
     );
   } else if (!wallet) {
-    dialogActions.append(makeNode('span', 'live-slot-hint', 'Gamer credit details are unavailable.'));
+    dialogActions.append(makeNode('span', 'live-slot-hint', 'Player playtime is unavailable.'));
   } else if (!availableMinutes && !session) {
-    dialogActions.append(makeNode('span', 'live-slot-hint', 'Add gamer credit before starting this timer.'));
+    dialogActions.append(makeNode('span', 'live-slot-hint', 'Add player playtime before starting this timer.'));
   } else if (session?.status === 'stopped') {
     dialogActions.append(makeNode('span', 'live-slot-hint', 'This session timer has stopped.'));
   }
@@ -198,7 +199,7 @@ const renderSlots = ({ slots, bookings, sessions, wallets }) => {
       makeNode('span', '', formatDateTime(slot.starts_at)),
       makeNode('span', `live-slot-status${session ? ` is-${session.status}` : ''}`, session?.status === 'running' ? 'LIVE' : session?.status === 'paused' ? 'PAUSED' : 'Ready to start'),
     );
-    openButton.append(summary, makeNode('span', 'live-slot-open-hint', 'Tap to view gamer, credit & timer →'));
+    openButton.append(summary, makeNode('span', 'live-slot-open-hint', 'Tap to view gamer, playtime & timer →'));
     openButton.addEventListener('click', () => {
       renderSessionDialog(details);
       if (!sessionDialog.open) sessionDialog.showModal();
@@ -235,8 +236,8 @@ const renderSlots = ({ slots, bookings, sessions, wallets }) => {
 const loadSlots = async () => {
   const [slotsResult, bookingsResult, sessionsResult, walletsResult] = await Promise.all([
     client.from('availability_slots').select('id,console_id,starts_at,ends_at,available,console:consoles(name)').order('starts_at'),
-    client.from('bookings').select('id,user_id,console_id,starts_at,ends_at,status,total_price,profile:profiles!bookings_user_id_fkey(full_name,game_id,phone,game_tags)').order('starts_at'),
-    client.from('live_sessions').select('id,booking_id,user_id,console_id,status,hourly_rate,accumulated_seconds,charged_minutes,started_at,ended_at').order('created_at', { ascending: false }),
+    client.from('bookings').select('id,user_id,console_id,starts_at,ends_at,status,profile:profiles!bookings_user_id_fkey(full_name,game_id,phone,game_tags)').order('starts_at'),
+    client.from('live_sessions').select('id,booking_id,user_id,console_id,status,accumulated_seconds,charged_minutes,started_at,last_heartbeat_at,ended_at').order('created_at', { ascending: false }),
     client.rpc('get_admin_wallet_overview'),
   ]);
   const failure = [slotsResult, bookingsResult, sessionsResult, walletsResult].find((result) => result.error);
@@ -255,14 +256,25 @@ const syncRunningSessions = async () => {
     const running = await client.from('live_sessions').select('id').eq('status', 'running');
     if (running.error) throw running.error;
     for (const session of running.data) {
+      const heartbeat = await client.rpc('admin_heartbeat_live_session', {
+        p_session_id: session.id,
+        p_force_pause: connectionInterrupted,
+      });
+      if (heartbeat.error) throw heartbeat.error;
+      const currentSession = Array.isArray(heartbeat.data) ? heartbeat.data[0] : heartbeat.data;
+      if (currentSession?.status !== 'running') continue;
       const { error } = await client.rpc('admin_update_live_session', {
         p_session_id: session.id,
         p_action: 'sync',
       });
       if (error) throw error;
     }
+    connectionUnavailable = false;
+    connectionInterrupted = false;
+    sessionStorage.removeItem('liveSessionConnectionInterrupted');
     if (running.data.length) await loadSlots();
   } catch (error) {
+    connectionUnavailable = true;
     showMessage(feedback, error instanceof Error ? error.message : 'Could not synchronize live session charges.', true);
   } finally {
     isSyncing = false;
@@ -273,6 +285,17 @@ const start = async () => {
   const admin = await initializeAdminPage();
   if (!admin) return;
   client = admin.supabase;
+  window.addEventListener('offline', () => {
+    connectionUnavailable = true;
+    connectionInterrupted = true;
+    sessionStorage.setItem('liveSessionConnectionInterrupted', 'true');
+    showMessage(feedback, 'Connection lost. The timer display is held at its last saved heartbeat and will pause when the server is reachable again.', true);
+    updateClocks();
+  });
+  window.addEventListener('online', () => {
+    showMessage(feedback, 'Connection restored. Saving and checking session timers…');
+    syncRunningSessions();
+  });
   document.getElementById('closeLiveDialog').addEventListener('click', () => sessionDialog.close());
   sessionDialog.addEventListener('click', (event) => {
     if (event.target === sessionDialog) sessionDialog.close();

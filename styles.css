@@ -221,9 +221,13 @@ button {
 .nav-auth-feedback { color: #ff9999; font-size: 11px; }
 .nav-auth-feedback:empty { display: none; }
 .nav-logout { white-space: nowrap; }
+.nav-session-link { white-space: nowrap; }
 
-.mobile-login-link {
-  display: none;
+@media (min-width: 841px) and (max-width: 1100px) {
+  .site-header { gap: 16px; padding-inline: 24px; }
+  .site-header .brand-name { display: none; }
+  .main-nav { gap: 16px; font-size: 10px; letter-spacing: 0.1em; }
+  .header-actions { gap: 10px; }
 }
 
 .explore-link {
@@ -282,10 +286,10 @@ button {
 .main-nav {
   display: flex;
   align-items: center;
-  gap: clamp(18px, 2vw, 42px);
-  font-size: 12px;
+  gap: clamp(14px, 1.5vw, 26px);
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.78);
 }
@@ -1369,7 +1373,7 @@ button {
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
-.slot-button:hover { transform: translateY(-2px); background: rgba(82, 211, 139, 0.16); }
+.slot-button:hover { background: rgba(82, 211, 139, 0.16); }
 .slot-button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
 
 .slot-button.is-booked {
@@ -1471,6 +1475,8 @@ button {
 .status-filters .status-date-control { min-width: 200px; }
 .slot-button.is-pending { border-color: rgba(230, 251, 86, 0.45); border-left-color: var(--yellow); background: rgba(230, 251, 86, 0.09); }
 .slot-button.is-pending .slot-state { color: var(--yellow); }
+.slot-button.is-past { border-color: rgba(255, 255, 255, 0.12); border-left-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.025); color: var(--muted); }
+.slot-button.is-past .slot-state { color: var(--muted); }
 .status-legend .pending-dot { background: var(--yellow); }
 .slot-button:disabled { cursor: not-allowed; opacity: 0.65; }
 .status-signin { display: inline-flex; margin-top: 22px; }
@@ -1960,21 +1966,6 @@ private-booking-page {
 .menu-toggle { display: none; }
 
 @media (max-width: 840px) {
-  .homepage .site-header .main-nav a:not(.mobile-guest-link) {
-    display: none;
-  }
-
-  .homepage .mobile-login-link {
-    display: inline-flex;
-    order: 1;
-    min-height: 40px;
-    align-items: center;
-    padding: 0 13px;
-    border-color: rgba(230, 251, 86, 0.4);
-    background: rgba(230, 251, 86, 0.08);
-    color: var(--yellow);
-  }
-
   .site-header { height: var(--header-height); flex-wrap: wrap; align-content: center; }
   .menu-toggle {
     display: flex;
@@ -1994,6 +1985,29 @@ private-booking-page {
   .menu-toggle span { display: block; width: 20px; height: 2px; background: currentColor; transition: transform 0.18s ease, opacity 0.18s ease; }
   .site-header .main-nav,
   .site-header .header-actions { display: none; }
+  .homepage .site-header:not(.is-menu-open) .header-actions {
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    order: 1;
+    margin-right: auto;
+  }
+  .homepage .site-header:not(.is-menu-open) .header-actions [data-session-link] {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    padding: 0 13px;
+    border: 1px solid rgba(230, 251, 86, 0.4);
+    background: rgba(230, 251, 86, 0.08);
+    color: var(--yellow);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+  .homepage .site-header:not(.is-menu-open) .header-actions #bookDemoBtn,
+  .homepage .site-header:not(.is-menu-open) .header-actions #signOutButton,
+  .homepage .site-header:not(.is-menu-open) .header-actions .nav-auth-feedback {
+    display: none;
+  }
   .site-header.is-menu-open {
     height: auto;
     min-height: var(--header-height);
@@ -2035,17 +2049,6 @@ private-booking-page {
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.09);
   }
-  .homepage .site-header.is-menu-open:not(.is-authenticated) .header-actions {
-    display: none;
-  }
-  .homepage .site-header.is-menu-open.is-authenticated .header-actions {
-    display: flex;
-    flex: 0 0 100%;
-    order: 4;
-    align-items: stretch;
-  }
-  .homepage .site-header.is-menu-open.is-authenticated .header-actions [data-session-link],
-  .homepage .site-header.is-menu-open.is-authenticated .header-actions #bookDemoBtn { display: none; }
   .site-header.is-menu-open .menu-toggle span:first-child { transform: translateY(7px) rotate(45deg); }
   .site-header.is-menu-open .menu-toggle span:nth-child(2) { opacity: 0; }
   .site-header.is-menu-open .menu-toggle span:last-child { transform: translateY(-7px) rotate(-45deg); }

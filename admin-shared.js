@@ -1,15 +1,5 @@
 import { getCurrentUser, showMessage, supabase } from './supabase.js';
 
-const pages = [
-  ['admin.html', 'Overview'],
-  ['admin-tournaments.html', 'Tournaments'],
-  ['admin-gamers.html', 'Gamers & credit'],
-  ['admin-slots.html', 'Slots & consoles'],
-  ['admin-live.html', 'Live sessions'],
-  ['admin-games.html', 'More games'],
-  ['admin-settings.html', 'Settings'],
-];
-
 export const initializeAdminPage = async () => {
   const feedback = document.getElementById('adminFeedback');
   if (!supabase) {
@@ -36,14 +26,6 @@ export const initializeAdminPage = async () => {
     return null;
   }
 
-  const nav = document.getElementById('adminPageNav');
-  const currentPage = document.body.dataset.adminPage;
-  for (const [href, label] of pages) {
-    const link = document.createElement('a');
-    link.href = href;
-    link.textContent = label;
-    if (href === currentPage) link.setAttribute('aria-current', 'page');
-    nav.append(link);
-  }
+  document.getElementById('adminPageNav')?.remove();
   return { user, supabase };
 };

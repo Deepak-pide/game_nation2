@@ -11,6 +11,7 @@ const bookingConfirmDetails = document.getElementById('bookingConfirmDetails');
 const bookingConfirmYes = document.getElementById('bookingConfirmYes');
 const bookingConfirmNo = document.getElementById('bookingConfirmNo');
 let pendingConfirmation;
+let bookingNotice = '';
 
 const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
@@ -60,18 +61,19 @@ const updateBooking = async (bookingId) => {
 const renderSlot = (slot, booking, user) => {
   const confirmed = booking && ['approved', 'completed'].includes(booking.status);
   const pending = booking?.status === 'pending';
+  const isPast = new Date(slot.starts_at).getTime() <= Date.now();
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = `slot-button${confirmed ? ' is-booked' : ''}${pending ? ' is-pending' : ''}`;
-  button.disabled = !user || confirmed || (!booking && !slot.available);
-  button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${confirmed ? 'confirmed' : pending ? 'request pending' : 'available'}`);
+  button.className = `slot-button${confirmed ? ' is-booked' : ''}${pending ? ' is-pending' : ''}${isPast && !pending ? ' is-past' : ''}`;
+  button.disabled = !user || confirmed || (!pending && isPast) || (!booking && !slot.available);
+  button.setAttribute('aria-label', `${formatTime(slot.starts_at)}, ${confirmed ? 'confirmed' : pending ? 'request pending' : isPast ? 'time has passed' : slot.available ? 'available' : 'unavailable'}`);
 
   const time = document.createElement('span');
   time.className = 'slot-time';
   time.textContent = formatTime(slot.starts_at);
   const state = document.createElement('span');
   state.className = 'slot-state';
-  state.textContent = confirmed ? 'Confirmed' : pending ? 'Pending review' : slot.available ? 'Request slot' : 'Unavailable';
+  state.textContent = confirmed ? 'Confirmed' : pending ? 'Pending approval' : isPast ? 'Time passed' : slot.available ? 'Request slot' : 'Unavailable';
   button.append(time, state);
 
   if (pending && booking.user_id === user?.id) {
@@ -107,11 +109,14 @@ bookingConfirmYes.addEventListener('click', async () => {
   else await updateBooking(booking.id);
 });
 
-const renderSlots = async () => {
-  if (!supabase || !consoleSelect.value || !bookingDateInput.value) return;
-  bookingFeedback.textContent = 'Loading availability…';
+const renderSlots = async (newRequest = null) => {
+  if (!supabase || !consoleSelect.value || !bookingDateInput.value) return false;
+  if (!bookingNotice) bookingFeedback.textContent = 'Loading availability…';
   const { user, error: authError } = await getCurrentUser();
-  if (authError) return showMessage(bookingFeedback, authError.message, true);
+  if (authError) {
+    showMessage(bookingFeedback, authError.message, true);
+    return false;
+  }
   const { start, end } = getDateBounds(bookingDateInput.value);
   const requests = [
     supabase.from('availability_slots').select('id,console_id,starts_at,ends_at,available')
@@ -128,7 +133,10 @@ const renderSlots = async () => {
   }
   const [slotsResult, confirmedResult, ownBookingsResult] = await Promise.all(requests);
   const failed = [slotsResult, confirmedResult, ownBookingsResult].find((result) => result?.error);
-  if (failed) return showMessage(bookingFeedback, failed.error.message, true);
+  if (failed) {
+    showMessage(bookingFeedback, failed.error.message, true);
+    return false;
+  }
 
   selectedDateLabel.textContent = formatDateLabel(bookingDateInput.value);
   slotGroups.replaceChildren();
@@ -137,6 +145,9 @@ const renderSlots = async () => {
     if (!['pending', 'approved', 'completed'].includes(booking.status)) continue;
     const current = bookingsByStart.get(booking.starts_at);
     if (!current || ['approved', 'completed'].includes(booking.status)) bookingsByStart.set(booking.starts_at, booking);
+  }
+  if (newRequest?.status === 'pending') {
+    bookingsByStart.set(newRequest.starts_at, newRequest);
   }
   for (const confirmed of confirmedResult.data) {
     const slot = slotsResult.data.find((candidate) => new Date(candidate.starts_at) < new Date(confirmed.ends_at)
@@ -170,25 +181,58 @@ const renderSlots = async () => {
     signIn.textContent = 'Sign in to request a session';
     slotGroups.append(signIn);
   }
-  showMessage(bookingFeedback, '');
+  showMessage(bookingFeedback, bookingNotice);
+  return true;
 };
 
 async function requestBooking(slot) {
   showMessage(bookingFeedback, 'Sending your request…');
-  const { error } = await supabase.from('bookings').insert({
-    console_id: slot.console_id,
-    starts_at: slot.starts_at,
-    ends_at: slot.ends_at,
-  });
-  if (error) showMessage(bookingFeedback, error.message, true);
-  else showMessage(bookingFeedback, 'Request sent. It will be reserved after admin approval.');
-  await renderSlots();
+  bookingNotice = '';
+  try {
+    const { data: booking, error } = await supabase.from('bookings').insert({
+      console_id: slot.console_id,
+      starts_at: slot.starts_at,
+      ends_at: slot.ends_at,
+    }).select('id,user_id,console_id,starts_at,ends_at,status').single();
+    if (error) {
+      await renderSlots();
+      const message = /past/i.test(error.message)
+        ? 'That time has already passed. Choose a future slot.'
+        : /signed-in gamer|admin/i.test(error.message)
+          ? 'Sign in with a gamer account to request a booking.'
+          : /not available|overlap|exclusion/i.test(error.message)
+            ? 'That slot is no longer available. Please choose another time.'
+            : /JWT|token|auth session|unauthorized/i.test(error.message)
+              ? 'Your sign-in has expired. Sign in again, then retry your booking.'
+              : error.message;
+      showMessage(bookingFeedback, message, true);
+      return;
+    }
+    if (booking.status !== 'pending') {
+      await renderSlots();
+      showMessage(bookingFeedback, 'The request was created but is not pending. Refresh the page or contact Game Nation.', true);
+      return;
+    }
+    bookingNotice = 'Request sent successfully — Pending admin approval. This slot is not confirmed until approved.';
+    const refreshed = await renderSlots(booking);
+    showMessage(bookingFeedback, refreshed
+      ? bookingNotice
+      : `${bookingNotice} Reload the page if the slot does not update.`);
+  } catch (error) {
+    showMessage(bookingFeedback, error instanceof Error ? error.message : 'Could not send the booking request.', true);
+  }
 }
 
 bookingDateInput.value = getLocalDateString();
 bookingDateInput.min = getLocalDateString();
-bookingDateInput.addEventListener('change', renderSlots);
-consoleSelect.addEventListener('change', renderSlots);
+bookingDateInput.addEventListener('change', () => {
+  bookingNotice = '';
+  renderSlots();
+});
+consoleSelect.addEventListener('change', () => {
+  bookingNotice = '';
+  renderSlots();
+});
 
 if (configurationError) {
   showMessage(bookingFeedback, configurationError, true);

@@ -9,12 +9,20 @@ const isAdminPage = Boolean(document.body.dataset.adminPage);
 if (header && actionNavigation) {
   const adminPages = [
     ['admin.html', 'Overview'],
-    ['admin.html#bookingRequests', 'Requests'],
     ['admin-tournaments.html', 'Tournaments'],
     ['admin-gamers.html', 'Gamers'],
     ['admin-slots.html', 'Slots'],
     ['admin-live.html', 'Live sessions'],
     ['admin-settings.html', 'Settings'],
+  ];
+  const homeHref = document.body.classList.contains('homepage')
+    ? '#top'
+    : 'index.html?skipIntro=1#top';
+  const publicPages = [
+    [homeHref, 'Home'],
+    ['more-games.html', 'Explore'],
+    ['tournaments.html', 'Tournaments'],
+    ['status.html', 'Book'],
   ];
   if (isAdminPage) {
     const brand = header.querySelector('.brand');
@@ -28,11 +36,19 @@ if (header && actionNavigation) {
         return link;
       }));
     }
+  } else if (mainNavigation) {
+    mainNavigation.setAttribute('aria-label', 'Main navigation');
+    mainNavigation.replaceChildren(...publicPages.map(([href, label]) => {
+      const link = document.createElement('a');
+      link.href = href;
+      link.textContent = label;
+      return link;
+    }));
   }
 
   const bookDemoButton = actionNavigation.querySelector('#bookDemoBtn');
   const sessionLink = document.createElement('a');
-  sessionLink.className = 'explore-link';
+  sessionLink.className = 'explore-link nav-session-link';
   sessionLink.dataset.sessionLink = '';
   sessionLink.href = isAdminPage ? 'admin.html' : 'account.html';
   sessionLink.textContent = isAdminPage ? 'Admin hub' : 'Login';
@@ -55,11 +71,6 @@ if (header && actionNavigation) {
     logoutButton.hidden = !authenticated;
     sessionLink.href = isAdminPage ? 'admin.html' : authenticated ? 'dashboard.html' : 'account.html';
     sessionLink.textContent = isAdminPage ? 'Admin hub' : authenticated ? 'Dashboard' : 'Login';
-    const mobileLogin = header.querySelector('.mobile-login-link');
-    if (mobileLogin) {
-      mobileLogin.href = isAdminPage ? 'admin.html' : authenticated ? 'dashboard.html' : 'account.html';
-      mobileLogin.textContent = isAdminPage ? 'Admin hub' : authenticated ? 'Dashboard' : 'Login';
-    }
   };
 
   setAuthenticatedNavigation(false);
