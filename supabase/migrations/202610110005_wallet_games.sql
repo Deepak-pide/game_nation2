@@ -46,9 +46,39 @@ create table if not exists public.games (
   mode text not null check (mode in ('solo', 'duo', 'squad')),
   image_url text not null default '',
   rating numeric(2, 1) not null default 4.5 check (rating between 1 and 5),
+  description text not null default '',
+  youtube_url text not null default '',
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'games' and column_name = 'description'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'games' and column_name = 'youtube_url'
+  ) then
+    delete from public.games;
+  end if;
+end;
+$$;
+
+alter table public.games
+  add column if not exists description text not null default '',
+  add column if not exists youtube_url text not null default '';
+
+alter table public.games
+  drop constraint if exists games_youtube_url_check;
+
+alter table public.games
+  add constraint games_youtube_url_check
+  check (
+    youtube_url = ''
+    or youtube_url ~* '^https?://(www\.)?(youtube\.com|youtu\.be)/'
+  );
 
 create unique index if not exists games_title_case_unique on public.games (lower(title));
 create index if not exists games_active_mode_idx on public.games (active, mode, title);

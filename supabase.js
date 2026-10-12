@@ -29,7 +29,7 @@ export const showMessage = (element, message, isError = false) => {
   const missingHeartbeatMigration = /(?:column\s+["']?(?:public\.)?live_sessions\.last_heartbeat_at["']?\s+does not exist|admin_heartbeat_live_session.*(?:does not exist|schema cache|PGRST202))/i.test(text);
   const missingSchema = /PGRST205|could not find the table|schema cache/i.test(text);
   element.textContent = missingHeartbeatMigration
-    ? 'Live-session disconnect protection is not installed in Supabase. Apply supabase/migrations/202610120004_live_session_disconnect_pause.sql in the Supabase SQL Editor, then reload this page.'
+    ? 'Live-session disconnect protection is not installed in Supabase. Apply supabase/migrations/202610120001_admin_live_sessions.sql in the Supabase SQL Editor, then reload this page.'
     : missingSchema
     ? 'Connected to Supabase, but the Game Nation database is not installed yet. Run the SQL migrations in supabase/migrations/ in order, then reload this page.'
     : text;
