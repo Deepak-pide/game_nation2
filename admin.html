@@ -23,7 +23,7 @@
         <nav class="admin-page-nav" id="adminPageNav" aria-label="Admin pages"></nav>
         <p class="dashboard-feedback" id="adminFeedback" role="status" aria-live="polite">Checking administrator access…</p>
         <section class="admin-overview-section" aria-labelledby="adminAnalyticsTitle">
-          <div class="section-heading"><div><p class="eyebrow"><span></span> At a glance</p><h2 id="adminAnalyticsTitle">Business analytics</h2></div><button class="table-action" id="refreshAdminOverview" type="button">Refresh</button></div>
+          <div class="section-heading"><div><p class="eyebrow"><span></span> At a glance</p><h2 id="adminAnalyticsTitle">Business analytics</h2></div><div class="admin-analytics-actions"><button class="table-action" id="resetAdminAnalytics" type="button" aria-label="Reset analytics" title="Reset analytics">↻</button><button class="table-action" id="refreshAdminOverview" type="button">Refresh</button></div></div>
           <div class="admin-overview-metrics" id="adminOverviewMetrics" aria-live="polite"></div>
         </section>
         <section class="dashboard-section admin-operation-card admin-accent-amber admin-request-section" id="bookingRequests">
@@ -42,6 +42,19 @@
         </section>
       </div>
     </main>
+    <dialog class="booking-confirm-dialog live-password-dialog" id="resetAnalyticsDialog" aria-labelledby="resetAnalyticsTitle">
+      <form class="booking-confirm-card live-header-password-form" id="resetAnalyticsForm">
+        <p class="eyebrow"><span></span> Confirm analytics reset</p>
+        <h2 id="resetAnalyticsTitle">Reset analytics?</h2>
+        <p class="booking-confirm-details">This resets the dashboard reporting baseline to now. Booking and wallet history will not be deleted. Enter your admin password to continue.</p>
+        <label class="form-field">Admin password<input id="resetAnalyticsPassword" name="password" type="password" autocomplete="current-password" required /></label>
+        <p class="private-booking-feedback" id="resetAnalyticsFeedback" role="status" aria-live="polite"></p>
+        <div class="booking-confirm-actions">
+          <button class="booking-confirm-no" id="cancelAnalyticsReset" type="button">Cancel</button>
+          <button class="nav-pill booking-confirm-yes" id="confirmAnalyticsReset" type="submit">Verify &amp; reset</button>
+        </div>
+      </form>
+    </dialog>
     <script type="module" src="admin-home.js"></script>
     <script type="module" src="navigation.js"></script>
   </body>

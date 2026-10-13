@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Choose an upcoming PlayStation slot and book with just your name." />
+    <title>Game Nation | Quick Booking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="guest-booking-body">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Game Nation home"><span class="brand-mark">GN</span><span class="brand-name">GAME <b>NATION</b></span></a>
+      <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mainNavigation actionNavigation"><span></span><span></span><span></span></button>
+      <nav class="main-nav" aria-label="Main navigation"><a href="more-games.html">Games</a></nav>
+      <div class="header-actions"><a class="nav-pill" href="account.html">Login</a></div>
+    </header>
+    <main class="guest-booking-page">
+      <div class="guest-booking-shell">
+        <a class="guest-back-link" href="index.html">← Home</a>
+        <section class="guest-booking-heading">
+          <p class="eyebrow"><span></span> No account needed</p>
+          <h1>Book a <span>slot.</span></h1>
+          <a class="guest-private-booking-link" href="private-booking.html">
+            <span><strong>Need a private booking?</strong><small>Send a request for a private session. Our team will confirm availability and approval.</small></span>
+            <span class="guest-private-booking-action">Request approval <span aria-hidden="true">↗</span></span>
+          </a>
+        </section>
+        <section class="guest-booking-panel" aria-labelledby="guestSlotsTitle">
+          <div class="guest-booking-panel-head">
+            <div><p class="eyebrow"><span></span> Next seven days</p><h2 id="guestSlotsTitle">Available slots</h2></div>
+            <label class="guest-date-label">Starting date<input id="guestBookingDate" type="date" /></label>
+          </div>
+          <p class="guest-booking-feedback" id="guestBookingFeedback" role="status" aria-live="polite">Loading available slots…</p>
+          <div class="guest-slot-list" id="guestSlotList" aria-live="polite"></div>
+          <p class="guest-empty-state" id="guestSlotsEmpty" hidden>No available slots on this date. Try another day.</p>
+        </section>
+      </div>
+    </main>
+    <dialog class="guest-booking-dialog" id="guestBookingDialog" aria-labelledby="guestBookingDialogTitle">
+      <form id="guestBookingForm" class="guest-booking-form">
+        <button class="guest-dialog-close" id="closeGuestBooking" type="button" aria-label="Close booking form">×</button>
+        <p class="eyebrow"><span></span> Your session</p>
+        <h2 id="guestBookingDialogTitle">Make it <span>yours.</span></h2>
+        <div class="guest-selected-slot" id="guestSelectedSlot"></div>
+        <label class="form-field">Your name<input id="guestBookingName" name="name" autocomplete="name" maxlength="80" required placeholder="Enter your name" /></label>
+        <fieldset class="guest-player-picker">
+          <legend>How many players?</legend>
+          <div class="guest-player-options">
+            <button class="guest-player-option is-selected" type="button" data-players="1" aria-pressed="true"><span class="guest-player-icons"></span><strong>1</strong><small>Player</small></button>
+            <button class="guest-player-option" type="button" data-players="2" aria-pressed="false"><span class="guest-player-icons"></span><strong>2</strong><small>Players</small></button>
+            <button class="guest-player-option" type="button" data-players="3" aria-pressed="false"><span class="guest-player-icons"></span><strong>3</strong><small>Players</small></button>
+          </div>
+        </fieldset>
+        <div class="guest-booking-price"><span>Total · ₹20 per player</span><strong id="guestBookingPrice">₹20</strong></div>
+        <p class="guest-dialog-feedback" id="guestDialogFeedback" role="status" aria-live="polite"></p>
+        <button class="nav-pill guest-booking-submit" id="guestBookingSubmit" type="submit">Book instantly</button>
+      </form>
+    </dialog>
+    <script type="module" src="quick-booking.js"></script>
+    <script type="module" src="navigation.js"></script>
+  </body>
+</html>

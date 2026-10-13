@@ -21,7 +21,7 @@
       <nav class="admin-page-nav" id="adminPageNav" aria-label="Admin pages"></nav>
       <p class="dashboard-feedback" id="adminFeedback" role="status" aria-live="polite">Checking administrator access…</p>
       <section class="dashboard-section admin-operation-card admin-accent-violet">
-        <div class="section-heading"><div><p class="eyebrow"><span></span> Live schedule</p><h2>Live sessions</h2></div><button class="nav-pill" id="refreshLiveSlots" type="button">Refresh slots</button></div>
+        <div class="section-heading"><div><p class="eyebrow"><span></span> Live schedule</p><h2>Live sessions</h2></div><div class="live-schedule-actions"><button class="table-action live-quick-start-button" id="openQuickStart" type="button">＋ Quick Start</button><button class="nav-pill" id="refreshLiveSlots" type="button">Refresh slots</button></div></div>
         <div class="live-slot-grid" id="liveSlotList" aria-live="polite"></div>
         <p class="empty-state" id="liveSlotsEmpty" hidden>No live or Quick Book sessions are scheduled.</p>
       </section>
@@ -52,6 +52,37 @@
             <dl id="liveDialogCreditFacts" class="live-dialog-credit-facts"></dl>
             <p class="live-dialog-credit-note" id="liveDialogCreditNote">The timer bills complete minutes only and stops automatically when the available credit limit is reached.</p>
             <div id="liveDialogActions" class="live-dialog-actions"></div>
+          </section>
+        </div>
+      </div>
+    </dialog>
+    <dialog class="quick-start-dialog" id="quickStartDialog" aria-labelledby="quickStartTitle">
+      <div class="quick-start-shell">
+        <button class="live-dialog-close" id="closeQuickStart" type="button" aria-label="Close Quick Start">×</button>
+        <div class="quick-start-topbar"><p class="eyebrow"><span></span> Walk-in session</p><span id="quickStartStatus" class="quick-start-status">SET UP SESSION</span></div>
+        <div class="quick-start-layout">
+          <section class="quick-start-details">
+            <h2 id="quickStartTitle">Quick <span>Start</span></h2>
+            <p class="quick-start-copy">Add a player and start a session using the saved Quick Start timer length.</p>
+            <form id="quickStartForm" class="quick-start-form">
+              <label class="form-field">Player name<input name="name" maxlength="80" required placeholder="Enter player name" /></label>
+              <label class="form-field">Players<select name="players" id="quickStartPlayers"><option value="1">1 player</option><option value="2">2 players</option><option value="3">3 players</option></select></label>
+              <div class="quick-start-price"><span>Price · ₹20 per player</span><strong id="quickStartPrice">₹20</strong></div>
+              <p class="quick-start-feedback" id="quickStartFeedback" role="status" aria-live="polite"></p>
+              <button class="nav-pill" id="quickStartSubmit" type="submit" disabled>Start session</button>
+            </form>
+          </section>
+          <section class="quick-start-live" aria-label="Quick Start session timer">
+            <div class="quick-start-controls" id="quickStartControls" hidden>
+              <button class="quick-start-pause" id="quickStartPause" type="button">Pause</button>
+              <button class="quick-start-end" id="quickStartEnd" type="button">End session</button>
+            </div>
+            <div class="quick-start-clock-wrap">
+              <span id="quickStartTimerLabel">READY WHEN YOU ARE</span>
+              <strong id="quickStartClock">--:--</strong>
+              <small id="quickStartTimerName">Configured duration</small>
+            </div>
+            <img class="quick-start-playstation" src="https://static.vecteezy.com/system/resources/previews/020/190/708/non_2x/playstation-ps5-ps4-logo-free-free-vector.jpg" alt="PlayStation logo" />
           </section>
         </div>
       </div>

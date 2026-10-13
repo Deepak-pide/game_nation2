@@ -12,7 +12,14 @@ const headerPasswordForm = document.getElementById('liveHeaderPasswordForm');
 const headerPasswordInput = document.getElementById('liveHeaderPassword');
 const headerPasswordFeedback = document.getElementById('liveHeaderPasswordFeedback');
 const headerPasswordSubmit = headerPasswordForm.querySelector('[type="submit"]');
+const quickStartDialog = document.getElementById('quickStartDialog');
+const quickStartForm = document.getElementById('quickStartForm');
+const quickStartFeedback = document.getElementById('quickStartFeedback');
+const quickStartSubmit = document.getElementById('quickStartSubmit');
+const quickStartControls = document.getElementById('quickStartControls');
+let quickStartSession = null;
 let client;
+let timerSettings = { quickBookingMinutes: 40, quickStartMinutes: 40 };
 let clockInterval;
 let syncInterval;
 let isSyncing = false;
@@ -28,7 +35,10 @@ const formatElapsed = (seconds) => {
   const remainder = total % 60;
   return [hours, minutes, remainder].map((part) => String(part).padStart(2, '0')).join(':');
 };
-const quickBookingDurationSeconds = 40 * 60;
+const quickBookingDurationSeconds = (session) =>
+  (Number(session?.duration_minutes) || timerSettings.quickBookingMinutes) * 60;
+const quickStartDurationSeconds = (session) =>
+  (Number(session?.duration_minutes) || timerSettings.quickStartMinutes) * 60;
 const formatCountdown = (seconds) => {
   const total = Math.ceil(seconds);
   const sign = total < 0 ? '-' : '';
@@ -60,7 +70,7 @@ const updateClocks = () => {
     const card = clock.closest('[data-quick-session]');
     const session = card?.quickSessionData;
     if (!card) return;
-    const remainingSeconds = quickBookingDurationSeconds - (session ? sessionSeconds(session) : 0);
+    const remainingSeconds = quickBookingDurationSeconds(session) - (session ? sessionSeconds(session) : 0);
     clock.textContent = formatCountdown(remainingSeconds);
     clock.closest('.live-quick-timer')?.classList.toggle('is-overdue', remainingSeconds <= 0);
     const state = card.querySelector('[data-quick-state]');
@@ -70,8 +80,45 @@ const updateClocks = () => {
         : session?.status.toUpperCase() || 'READY';
     }
   });
+  slotsContainer.querySelectorAll('[data-quick-start-clock]').forEach((clock) => {
+    const card = clock.closest('[data-quick-start-session]');
+    if (card?.quickStartSessionData) {
+      clock.textContent = formatCountdown(quickStartDurationSeconds(card.quickStartSessionData) - sessionSeconds(card.quickStartSessionData));
+    }
+  });
+  if (quickStartSession) {
+    document.getElementById('quickStartClock').textContent = formatCountdown(
+      quickStartDurationSeconds(quickStartSession) - sessionSeconds(quickStartSession),
+    );
+  }
   if (selectedSessionDetails?.session) {
     document.getElementById('liveDialogClock').textContent = formatElapsed(sessionSeconds(selectedSessionDetails.session));
+  }
+};
+
+const quickStartTimerAction = async (action) => {
+  if (!quickStartSession?.id) return;
+  try {
+    const { data, error } = await client.rpc('admin_update_quick_start_session', {
+      p_session_id: quickStartSession.id,
+      p_action: action,
+    });
+    if (error) {
+      showMessage(quickStartFeedback, error.message, true);
+      return;
+    }
+    quickStartSession = Array.isArray(data) ? data[0] : data;
+    const paused = quickStartSession.status === 'paused';
+    document.getElementById('quickStartStatus').textContent = quickStartSession.status.toUpperCase();
+    document.getElementById('quickStartTimerLabel').textContent = paused ? 'SESSION PAUSED' : action === 'stop' ? 'SESSION ENDED' : 'SESSION IN PROGRESS';
+    document.getElementById('quickStartPause').textContent = paused ? 'Resume' : 'Pause';
+    document.getElementById('quickStartPause').disabled = action === 'stop';
+    document.getElementById('quickStartEnd').disabled = action === 'stop';
+    showMessage(quickStartFeedback, action === 'stop' ? 'Session ended.' : paused ? 'Timer paused.' : 'Timer running.');
+    updateClocks();
+    await loadSlots();
+  } catch (error) {
+    showMessage(quickStartFeedback, error instanceof Error ? error.message : 'Could not update the Quick Start timer.', true);
   }
 };
 
@@ -223,11 +270,12 @@ const renderSessionDialog = (details) => {
   }
 };
 
-const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickSessions }) => {
+const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickSessions, quickStartSessions }) => {
   slotsContainer.replaceChildren();
   const activeSessions = new Map(sessions.map((session) => [session.booking_id, session]));
   const walletByGamer = new Map(wallets.map((wallet) => [wallet.user_id, wallet]));
-  const eligibleBookings = bookings.filter((booking) => booking.status === 'approved');
+  const eligibleBookings = bookings.filter((booking) =>
+    booking.status === 'approved' && activeSessions.get(booking.id)?.status !== 'stopped');
   const visibleBookings = new Set();
 
   for (const slot of slots) {
@@ -265,8 +313,9 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
   for (const quickBooking of quickBookings) {
     const slot = quickBooking.slot;
     if (!slot) continue;
-    const card = makeNode('article', 'live-slot-card is-quick-booking');
     const quickSession = quickSessions.get(quickBooking.id) || null;
+    if (quickSession?.status === 'stopped') continue;
+    const card = makeNode('article', 'live-slot-card is-quick-booking');
     card.dataset.quickSession = '';
     card.quickSessionData = quickSession;
     if (quickSession) card.classList.add(`is-quick-session-${quickSession.status}`);
@@ -282,9 +331,9 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
     meta.append(makeNode('span', '', `${quickBooking.players} ${quickBooking.players === 1 ? 'player' : 'players'} · ₹${quickBooking.total_price}`));
     card.append(meta);
     const timer = makeNode('div', `live-quick-timer${quickSession ? ` status-${quickSession.status}` : ''}`);
-    timer.append(makeNode('span', 'live-quick-timer-label', '40 MIN COUNTDOWN'));
+    timer.append(makeNode('span', 'live-quick-timer-label', `${quickBookingDurationSeconds(quickSession) / 60} MIN COUNTDOWN`));
     const clock = makeNode('strong', 'live-quick-clock', formatCountdown(
-      quickBookingDurationSeconds - (quickSession ? sessionSeconds(quickSession) : 0),
+      quickBookingDurationSeconds(quickSession) - (quickSession ? sessionSeconds(quickSession) : 0),
     ));
     clock.dataset.quickClock = '';
     timer.append(clock);
@@ -317,7 +366,28 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
     if (actions.childElementCount) card.append(actions);
     slotsContainer.append(card);
   }
-  empty.hidden = visibleBookings.size + quickBookings.length > 0;
+  for (const quickStart of quickStartSessions) {
+    const card = makeNode('article', 'live-slot-card is-quick-booking is-session-running');
+    card.dataset.quickStartSession = '';
+    card.quickStartSessionData = quickStart;
+    card.append(
+      makeNode('div', 'live-slot-card-topline', 'QUICK START · WALK-IN'),
+      makeNode('h2', '', quickStart.name),
+      makeNode('div', 'live-slot-summary', `${quickStart.players} ${quickStart.players === 1 ? 'player' : 'players'} · ₹${quickStart.total_price}`),
+      makeNode('div', 'live-quick-booking-meta', quickStart.status.toUpperCase()),
+    );
+    const timer = makeNode('div', `live-quick-timer status-${quickStart.status}`);
+    timer.append(makeNode('span', 'live-quick-timer-label', `${quickStartDurationSeconds(quickStart) / 60} MIN COUNTDOWN`));
+    const clock = makeNode('strong', 'live-quick-clock', formatCountdown(
+      quickStartDurationSeconds(quickStart) - sessionSeconds(quickStart),
+    ));
+    clock.dataset.quickStartClock = '';
+    timer.append(clock);
+    card.append(timer);
+    slotsContainer.append(card);
+  }
+  empty.hidden = visibleBookings.size + quickBookings.filter((booking) =>
+    quickSessions.get(booking.id)?.status !== 'stopped').length + quickStartSessions.length > 0;
   if (selectedSessionDetails) {
     const refreshed = [...visibleBookings].includes(selectedSessionDetails.booking.id)
       ? Array.from(slots).find((slot) =>
@@ -344,7 +414,7 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
 };
 
 const loadSlots = async () => {
-  const [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult, quickSessionsResult] = await Promise.all([
+  const [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult, quickSessionsResult, quickStartSessionsResult] = await Promise.all([
     client.from('availability_slots').select('id,console_id,starts_at,ends_at,available,console:consoles(name)').order('starts_at'),
     client.from('bookings').select('id,user_id,console_id,starts_at,ends_at,status,profile:profiles!bookings_user_id_fkey(full_name,game_id,phone,game_tags)').order('starts_at'),
     client.from('live_sessions').select('id,booking_id,user_id,console_id,status,accumulated_seconds,charged_minutes,started_at,last_heartbeat_at,ended_at').order('created_at', { ascending: false }),
@@ -353,10 +423,14 @@ const loadSlots = async () => {
       .select('id,name,players,total_price,slot:availability_slots(starts_at,ends_at,console:consoles(name))')
       .order('created_at', { ascending: false }),
     client.from('quick_booking_sessions')
-      .select('id,quick_booking_id,status,accumulated_seconds,started_at,ended_at')
+      .select('id,quick_booking_id,duration_minutes,status,accumulated_seconds,started_at,ended_at')
+      .order('created_at', { ascending: false }),
+    client.from('admin_quick_start_sessions')
+      .select('id,name,players,total_price,duration_minutes,status,accumulated_seconds,started_at,ended_at')
+      .in('status', ['running', 'paused'])
       .order('created_at', { ascending: false }),
   ]);
-  const failure = [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult, quickSessionsResult].find((result) => result.error);
+  const failure = [slotsResult, bookingsResult, sessionsResult, walletsResult, quickBookingsResult, quickSessionsResult, quickStartSessionsResult].find((result) => result.error);
   if (failure) {
     showMessage(feedback, failure.error.message, true);
     return;
@@ -368,6 +442,7 @@ const loadSlots = async () => {
     wallets: walletsResult.data,
     quickBookings: quickBookingsResult.data,
     quickSessions: new Map(quickSessionsResult.data.map((session) => [session.quick_booking_id, session])),
+    quickStartSessions: quickStartSessionsResult.data,
   });
   showMessage(feedback, '');
 };
@@ -408,6 +483,106 @@ const start = async () => {
   const admin = await initializeAdminPage();
   if (!admin) return;
   client = admin.supabase;
+  const { data: timerSettingsData, error: timerSettingsError } = await client.from('quick_timer_settings')
+    .select('quick_booking_minutes,quick_start_minutes')
+    .eq('singleton', true)
+    .single();
+  if (timerSettingsError) {
+    showMessage(feedback, timerSettingsError.message, true);
+    return;
+  }
+  timerSettings = {
+    quickBookingMinutes: Number(timerSettingsData.quick_booking_minutes),
+    quickStartMinutes: Number(timerSettingsData.quick_start_minutes),
+  };
+  const openQuickStart = document.getElementById('openQuickStart');
+  const prepareQuickStart = async () => {
+    showMessage(quickStartFeedback, '');
+    const { data, error } = await client.from('admin_quick_start_sessions')
+      .select('id,name,players,total_price,duration_minutes,status,accumulated_seconds,started_at,ended_at')
+      .in('status', ['running', 'paused'])
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (error) {
+      showMessage(quickStartFeedback, error.message, true);
+      return;
+    }
+    quickStartSession = data[0] || null;
+    const hasActiveSession = Boolean(quickStartSession);
+    quickStartForm.hidden = hasActiveSession;
+    quickStartControls.hidden = !hasActiveSession;
+    if (hasActiveSession) {
+      document.getElementById('quickStartTitle').innerHTML = `Quick <span>Start</span>`;
+      document.getElementById('quickStartTimerName').textContent = quickStartSession.name;
+      document.getElementById('quickStartStatus').textContent = quickStartSession.status.toUpperCase();
+      document.getElementById('quickStartTimerLabel').textContent = quickStartSession.status === 'paused' ? 'SESSION PAUSED' : 'SESSION IN PROGRESS';
+      document.getElementById('quickStartPause').textContent = quickStartSession.status === 'paused' ? 'Resume' : 'Pause';
+      document.getElementById('quickStartPause').disabled = false;
+      document.getElementById('quickStartEnd').disabled = false;
+      updateClocks();
+    } else {
+      quickStartSession = null;
+      document.getElementById('quickStartClock').textContent = formatCountdown(timerSettings.quickStartMinutes * 60);
+      document.getElementById('quickStartTimerLabel').textContent = 'READY WHEN YOU ARE';
+      document.getElementById('quickStartStatus').textContent = 'SET UP SESSION';
+      document.getElementById('quickStartTimerName').textContent = `${timerSettings.quickStartMinutes} minute session`;
+      quickStartForm.reset();
+      document.getElementById('quickStartPrice').textContent = '₹20';
+    }
+    if (!quickStartDialog.open) quickStartDialog.showModal();
+  };
+  openQuickStart.addEventListener('click', prepareQuickStart);
+  document.getElementById('closeQuickStart').addEventListener('click', () => quickStartDialog.close());
+  quickStartDialog.addEventListener('click', (event) => {
+    if (event.target === quickStartDialog) quickStartDialog.close();
+  });
+  document.getElementById('quickStartPlayers').addEventListener('change', (event) => {
+    document.getElementById('quickStartPrice').textContent = `₹${Number(event.currentTarget.value) * 20}`;
+  });
+  document.getElementById('quickStartPause').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    await quickStartTimerAction(quickStartSession?.status === 'paused' ? 'resume' : 'pause');
+    if (quickStartSession?.status !== 'stopped') button.disabled = false;
+  });
+  document.getElementById('quickStartEnd').addEventListener('click', async (event) => {
+    if (!window.confirm('End this Quick Start session? The timer cannot be resumed.')) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    await quickStartTimerAction('stop');
+    if (quickStartSession?.status !== 'stopped') button.disabled = false;
+  });
+  quickStartForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!quickStartForm.reportValidity()) return;
+    quickStartSubmit.disabled = true;
+    showMessage(quickStartFeedback, 'Creating session and starting timer…');
+    try {
+      const { data, error } = await client.rpc('admin_create_quick_start_session', {
+        p_name: quickStartForm.elements.name.value.trim(),
+        p_players: Number(quickStartForm.elements.players.value),
+      });
+      if (error) {
+        showMessage(quickStartFeedback, error.message, true);
+        return;
+      }
+      quickStartSession = Array.isArray(data) ? data[0] : data;
+      quickStartForm.hidden = true;
+      quickStartControls.hidden = false;
+      document.getElementById('quickStartStatus').textContent = 'RUNNING';
+      document.getElementById('quickStartTimerLabel').textContent = 'SESSION IN PROGRESS';
+      document.getElementById('quickStartTimerName').textContent = quickStartSession.name;
+      document.getElementById('quickStartPause').textContent = 'Pause';
+      document.getElementById('quickStartPause').disabled = false;
+      document.getElementById('quickStartEnd').disabled = false;
+      showMessage(quickStartFeedback, 'Quick Start session is live.');
+      updateClocks();
+    } catch (error) {
+      showMessage(quickStartFeedback, error instanceof Error ? error.message : 'Could not start the Quick Start session.', true);
+    } finally {
+      if (!quickStartForm.hidden) quickStartSubmit.disabled = false;
+    }
+  });
   const setHeaderHidden = (hidden) => {
     document.body.classList.toggle('live-header-hidden', hidden);
     headerToggle.setAttribute('aria-pressed', String(hidden));
@@ -474,6 +649,7 @@ const start = async () => {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_transactions' }, loadSlots)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_bookings' }, loadSlots)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_booking_sessions' }, loadSlots)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_quick_start_sessions' }, loadSlots)
     .subscribe();
   clockInterval = window.setInterval(updateClocks, 1000);
   syncInterval = window.setInterval(syncRunningSessions, 15000);

@@ -15,15 +15,21 @@ if (header && actionNavigation) {
     ['admin-live.html', 'Live sessions'],
     ['admin-settings.html', 'Settings'],
   ];
-  const homeHref = document.body.classList.contains('homepage')
+  const isSimpleHomepage = document.body.classList.contains('homepage-simple');
+  const isGuestBookingPage = document.body.classList.contains('guest-booking-body');
+  const homeHref = document.body.classList.contains('homepage') || isSimpleHomepage
     ? '#top'
     : 'index.html?skipIntro=1#top';
-  const publicPages = [
-    [homeHref, 'Home'],
-    ['more-games.html', 'Explore'],
-    ['tournaments.html', 'Tournaments'],
-    ['status.html', 'Book'],
-  ];
+  const publicPages = isSimpleHomepage
+    ? [['more-games.html', 'Games'], ['quick-booking.html', 'Quick Booking']]
+    : isGuestBookingPage
+      ? [['index.html', 'Home'], ['more-games.html', 'Games'], ['quick-booking.html', 'Quick Booking']]
+    : [
+        [homeHref, 'Home'],
+        ['more-games.html', 'Explore'],
+        ['tournaments.html', 'Tournaments'],
+        ['status.html', 'Book'],
+      ];
   if (isAdminPage) {
     const brand = header.querySelector('.brand');
     if (brand) brand.href = 'admin.html';
@@ -48,7 +54,7 @@ if (header && actionNavigation) {
 
   const bookDemoButton = actionNavigation.querySelector('#bookDemoBtn');
   const sessionLink = document.createElement('a');
-  sessionLink.className = 'explore-link nav-session-link';
+  sessionLink.className = `${isSimpleHomepage ? 'nav-pill' : 'explore-link'} nav-session-link`;
   sessionLink.dataset.sessionLink = '';
   sessionLink.href = isAdminPage ? 'admin.html' : 'account.html';
   sessionLink.textContent = isAdminPage ? 'Admin hub' : 'Login';

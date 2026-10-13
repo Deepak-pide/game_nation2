@@ -6,6 +6,7 @@ export default defineConfig({
     rollupOptions: {
       input: [
         'index.html',
+        'quick-booking.html',
         'private-booking.html',
         'more-games.html',
         'game-details.html',
