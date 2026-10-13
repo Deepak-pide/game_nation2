@@ -215,7 +215,7 @@ async function requestBooking(slot) {
         : /signed-in gamer|admin/i.test(error.message)
           ? 'Sign in with a gamer account to book this slot.'
           : /insufficient wallet/i.test(error.message)
-            ? 'Add enough wallet credit to cover this booking, then try again.'
+            ? 'Booking still requires the latest Supabase migration. Apply the latest migrations, then try again.'
             : /not available|overlap|exclusion/i.test(error.message)
               ? 'That slot is no longer available. Please choose another time.'
               : /JWT|token|auth session|unauthorized/i.test(error.message)

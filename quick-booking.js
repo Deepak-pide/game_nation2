@@ -77,6 +77,7 @@ const loadSlots = async () => {
     showMessage(feedback, error.message, true);
     return;
   }
+  const availableCount = data.filter((slot) => slot.available && !slot.booked).length;
   if (!data.length) {
     emptyState.hidden = false;
     showMessage(feedback, '');
@@ -98,19 +99,20 @@ const loadSlots = async () => {
     }
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = 'guest-slot-option';
-    card.setAttribute('aria-label', `${formatSlotTime(slot)}, select slot`);
+    card.className = `guest-slot-option${slot.booked ? ' is-booked' : ''}`;
+    card.disabled = slot.booked || !slot.available;
+    card.setAttribute('aria-label', `${formatSlotTime(slot)}, ${slot.booked ? 'booked' : 'select slot'}`);
     const time = document.createElement('strong');
     time.className = 'guest-slot-time';
     time.textContent = formatSlotTime(slot);
     const action = document.createElement('span');
     action.className = 'guest-slot-action';
-    action.textContent = 'Select →';
+    action.textContent = slot.booked ? 'Booked' : 'Select →';
     card.append(time, action);
-    card.addEventListener('click', () => openBookingDialog(slot));
+    if (!card.disabled) card.addEventListener('click', () => openBookingDialog(slot));
     dayGroups.get(dayKey).append(card);
   }
-  showMessage(feedback, `${data.length} available slot${data.length === 1 ? '' : 's'} · Book up to ${dateFormatter.format(new Date(end.getTime() - 1))}`);
+  showMessage(feedback, `${availableCount} available slot${availableCount === 1 ? '' : 's'} · Booked slots are shown in red · Book up to ${dateFormatter.format(new Date(end.getTime() - 1))}`);
 };
 
 dateInput.value = localDateValue(new Date());

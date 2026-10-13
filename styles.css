@@ -2393,6 +2393,9 @@ private-booking-page {
 .guest-slot-option { display: flex; min-width: 0; min-height: 62px; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border: 1px solid rgba(98, 214, 149, .28); border-radius: 7px; background: linear-gradient(145deg, rgba(59,143,93,.11), rgba(13,20,24,.72)); color: var(--text); text-align: left; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease; }
 .guest-slot-option:hover, .guest-slot-option:focus-visible { transform: translateY(-2px); border-color: #a5dc50; background: rgba(145, 198, 69, .13); box-shadow: 0 8px 20px rgba(0,0,0,.18); }
 .guest-slot-option:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.guest-slot-option.is-booked, .guest-slot-option.is-booked:hover { border-color: rgba(255, 105, 105, .48); background: linear-gradient(145deg, rgba(160, 45, 45, .22), rgba(27, 15, 18, .82)); color: #ffd2d2; cursor: not-allowed; }
+.guest-slot-option.is-booked .guest-slot-action { color: #ff9999; }
+.guest-slot-option:disabled { transform: none; box-shadow: none; }
 .guest-slot-time { font-size: clamp(13px, 1.4vw, 15px); line-height: 1.25; white-space: nowrap; }
 .guest-slot-action { flex: 0 0 auto; color: var(--yellow); font-size: 10px; font-weight: 700; white-space: nowrap; }
 .guest-empty-state { color: #aeb8c3; font-size: 13px; }
