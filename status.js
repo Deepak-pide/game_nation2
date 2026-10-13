@@ -76,7 +76,7 @@ const renderSlot = (slot, booking, user) => {
   time.textContent = formatTime(slot.starts_at);
   const state = document.createElement('span');
   state.className = 'slot-state';
-  state.textContent = quickBooked ? 'Booked' : confirmed ? 'Confirmed' : pending ? 'Pending approval' : isPast ? 'Time passed' : !user && slot.available ? 'Sign in to request' : slot.available ? 'Request slot' : 'Unavailable';
+  state.textContent = quickBooked ? 'Booked' : confirmed ? 'Confirmed' : pending ? 'Pending approval' : isPast ? 'Time passed' : !user && slot.available ? 'Sign in to book' : slot.available ? 'Book slot' : 'Unavailable';
   button.append(time, state);
 
   if (pending && booking.user_id === user?.id) {
@@ -192,7 +192,7 @@ const renderSlots = async (newRequest = null) => {
     const signIn = document.createElement('a');
     signIn.className = 'nav-pill status-signin';
     signIn.href = 'account.html';
-    signIn.textContent = 'Sign in to request a session';
+    signIn.textContent = 'Sign in to book a session';
     slotGroups.append(signIn);
   }
   showMessage(bookingFeedback, bookingNotice);
@@ -200,7 +200,7 @@ const renderSlots = async (newRequest = null) => {
 };
 
 async function requestBooking(slot) {
-  showMessage(bookingFeedback, 'Sending your request…');
+  showMessage(bookingFeedback, 'Confirming your booking…');
   bookingNotice = '';
   try {
     const { data: booking, error } = await supabase.from('bookings').insert({
@@ -213,27 +213,29 @@ async function requestBooking(slot) {
       const message = /past/i.test(error.message)
         ? 'That time has already passed. Choose a future slot.'
         : /signed-in gamer|admin/i.test(error.message)
-          ? 'Sign in with a gamer account to request a booking.'
-          : /not available|overlap|exclusion/i.test(error.message)
-            ? 'That slot is no longer available. Please choose another time.'
-            : /JWT|token|auth session|unauthorized/i.test(error.message)
-              ? 'Your sign-in has expired. Sign in again, then retry your booking.'
-              : error.message;
+          ? 'Sign in with a gamer account to book this slot.'
+          : /insufficient wallet/i.test(error.message)
+            ? 'Add enough wallet credit to cover this booking, then try again.'
+            : /not available|overlap|exclusion/i.test(error.message)
+              ? 'That slot is no longer available. Please choose another time.'
+              : /JWT|token|auth session|unauthorized/i.test(error.message)
+                ? 'Your sign-in has expired. Sign in again, then retry your booking.'
+                : error.message;
       showMessage(bookingFeedback, message, true);
       return;
     }
-    if (booking.status !== 'pending') {
+    if (booking.status !== 'approved') {
       await renderSlots();
-      showMessage(bookingFeedback, 'The request was created but is not pending. Refresh the page or contact Game Nation.', true);
+      showMessage(bookingFeedback, 'The booking was created but is not confirmed. Refresh the page or contact Game Nation.', true);
       return;
     }
-    bookingNotice = 'Request sent successfully — Pending admin approval. This slot is not confirmed until approved.';
+    bookingNotice = 'Booking confirmed instantly. Your slot is reserved.';
     const refreshed = await renderSlots(booking);
     showMessage(bookingFeedback, refreshed
       ? bookingNotice
       : `${bookingNotice} Reload the page if the slot does not update.`);
   } catch (error) {
-    showMessage(bookingFeedback, error instanceof Error ? error.message : 'Could not send the booking request.', true);
+    showMessage(bookingFeedback, error instanceof Error ? error.message : 'Could not confirm your booking.', true);
   }
 }
 

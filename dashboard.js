@@ -376,6 +376,20 @@ const renderAdminBookings = () => {
       action.addEventListener('click', () => setBookingStatus(booking.id, nextStatus));
       actions.append(action);
     }
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'table-action is-danger';
+    remove.textContent = 'Delete';
+    remove.addEventListener('click', async () => {
+      if (!window.confirm('Permanently delete this booking? Unstarted prepaid bookings are refunded. Any linked live timer and its charges will be retained.')) return;
+      remove.disabled = true;
+      showMessage(feedback, 'Deleting booking…');
+      const { error } = await supabase.rpc('admin_delete_booking', { p_booking_id: booking.id });
+      showMessage(feedback, error ? error.message : 'Booking deleted.', Boolean(error));
+      if (error) remove.disabled = false;
+      else await refreshAdmin();
+    });
+    actions.append(remove);
     row.append(actions);
     body.append(row);
   }

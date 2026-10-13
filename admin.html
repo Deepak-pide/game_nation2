@@ -19,7 +19,7 @@
     </header>
     <main class="admin-page">
       <div class="admin-shell">
-        <section class="dashboard-heading"><div><p class="eyebrow"><span></span> Control center</p><h1>Admin overview</h1><p class="status-heading-copy">Review performance and respond to player booking requests from one place.</p></div></section>
+        <section class="dashboard-heading"><div><p class="eyebrow"><span></span> Control center</p><h1>Admin overview</h1><p class="status-heading-copy">Review performance and manage confirmed player bookings from one place.</p></div></section>
         <nav class="admin-page-nav" id="adminPageNav" aria-label="Admin pages"></nav>
         <p class="dashboard-feedback" id="adminFeedback" role="status" aria-live="polite">Checking administrator access…</p>
         <section class="admin-overview-section" aria-labelledby="adminAnalyticsTitle">
@@ -27,7 +27,7 @@
           <div class="admin-overview-metrics" id="adminOverviewMetrics" aria-live="polite"></div>
         </section>
         <section class="dashboard-section admin-operation-card admin-accent-amber admin-request-section" id="bookingRequests">
-          <div class="section-heading"><div><p class="eyebrow"><span></span> Needs your attention</p><h2>Player booking requests</h2><p class="admin-settings-copy">Approve or reject pending player requests here.</p></div><a class="table-action" href="admin-slots.html">Manage slots</a></div>
+          <div class="section-heading"><div><p class="eyebrow"><span></span> Legacy requests</p><h2>Pending bookings</h2><p class="admin-settings-copy">New gamer bookings are confirmed instantly. Resolve any requests created before instant confirmation here.</p></div><a class="table-action" href="admin-slots.html">Manage slots</a></div>
           <div class="table-wrap"><table><thead><tr><th>Player</th><th>Console</th><th>Requested time</th><th>Action</th></tr></thead><tbody id="adminPendingBookings"></tbody></table></div>
           <p class="empty-state" id="adminPendingBookingsEmpty" hidden>No pending player requests.</p>
           <p class="dashboard-feedback" id="adminBookingFeedback" role="status" aria-live="polite"></p>

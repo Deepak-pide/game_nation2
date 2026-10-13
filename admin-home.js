@@ -94,7 +94,7 @@ const initializeOverview = async (admin) => {
         ['Revenue today', formatMoney(todayRevenue)],
         ['Revenue this month', formatMoney(monthRevenue)],
         ['Admin wallet', formatMoney(adminWalletBalance)],
-        ['Pending requests', String(pendingCountResult.count || 0)],
+        ['Legacy pending bookings', String(pendingCountResult.count || 0)],
         ['Completed this month', String(completedThisMonth.length)],
         ['Registered gamers', String(gamersResult.data.filter((gamer) => new Date(gamer.created_at) >= resetAt).length)],
         ['Slot utilization · month', `${availableHours ? Math.round((bookedHours / availableHours) * 100) : 0}%`],

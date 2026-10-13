@@ -314,7 +314,6 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
     const slot = quickBooking.slot;
     if (!slot) continue;
     const quickSession = quickSessions.get(quickBooking.id) || null;
-    if (quickSession?.status === 'stopped') continue;
     const card = makeNode('article', 'live-slot-card is-quick-booking');
     card.dataset.quickSession = '';
     card.quickSessionData = quickSession;
@@ -363,6 +362,24 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
       addQuickAction('Resume timer', 'resume', 'live-start-action');
       addQuickAction('Stop timer', 'stop', 'is-danger', 'Stop this Quick Book timer? This cannot be resumed.');
     }
+    const remove = makeNode('button', 'table-action is-danger', 'Delete booking');
+    remove.type = 'button';
+    remove.addEventListener('click', async () => {
+      if (!window.confirm(`Permanently delete the booking for ${quickBooking.name}?`)) return;
+      remove.disabled = true;
+      showMessage(feedback, 'Deleting guest booking…');
+      const { error } = await client.rpc('admin_delete_quick_booking', {
+        p_quick_booking_id: quickBooking.id,
+      });
+      if (error) {
+        remove.disabled = false;
+        showMessage(feedback, error.message, true);
+        return;
+      }
+      showMessage(feedback, 'Guest booking deleted.');
+      await loadSlots();
+    });
+    actions.append(remove);
     if (actions.childElementCount) card.append(actions);
     slotsContainer.append(card);
   }
@@ -386,8 +403,7 @@ const renderSlots = ({ slots, bookings, sessions, wallets, quickBookings, quickS
     card.append(timer);
     slotsContainer.append(card);
   }
-  empty.hidden = visibleBookings.size + quickBookings.filter((booking) =>
-    quickSessions.get(booking.id)?.status !== 'stopped').length + quickStartSessions.length > 0;
+  empty.hidden = visibleBookings.size + quickBookings.length + quickStartSessions.length > 0;
   if (selectedSessionDetails) {
     const refreshed = [...visibleBookings].includes(selectedSessionDetails.booking.id)
       ? Array.from(slots).find((slot) =>
